@@ -4,7 +4,6 @@
     ],
 
     "compilerOptions": {
-
         "outDir": "js",
         "rootDir": "./src/",
         "baseUrl": "./src/",

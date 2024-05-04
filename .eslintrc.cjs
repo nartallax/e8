@@ -53,7 +53,7 @@ module.exports = {
 		// бесит, когда линтер удаляет return, после которого я еще что-то хотел написать
 		"no-useless-return": ["off"],
 		"quote-props": ["warn", "as-needed", {numbers: true}],
-		"spaced-comment": ["warn", "always"],
+		"spaced-comment": ["warn", "always", { "markers": ["/"]}],
 		yoda: ["warn", "never"],
 		"array-bracket-newline": ["warn", "consistent"],
 		"array-bracket-spacing": ["warn", "never"],
