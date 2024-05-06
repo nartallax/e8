@@ -20,7 +20,7 @@
     "build:copy_static": "cp ./LICENSE ./target/ && cp ./README.md ./target && cp ./package-lock.json ./target && npm run build:cut_package",
     "build:cut_package": "npx package-cutter --output ./target/package.json --set types=\"e8.d.ts\"",
     "build:dts": "npx parcel build --target types --no-cache",
-    "dev": "npm run build && (npm run dev:js & npm run dev:dts & wait)",
+    "dev": "npm run dev:js & npm run dev:dts & wait",
     "dev:dts": "npx parcel watch --target types --no-cache",
     "dev:js": "npx parcel watch --target release --no-cache",
     "pack": "npm run build && cd target && npm pack && mv *.tgz e8.tgz"
