@@ -4,7 +4,7 @@
   "description": "2d game engine",
   "author": "Nartallax",
   "license": "0BSD",
-  "types": "e8.d.ts",
+  "types": "./target/e8.d.ts",
   "main": "e8.js",
   "type": "module",
   "scripts": {
@@ -14,19 +14,20 @@
     "test:generate": "npx clamsensor_codegen src src/generated/test.ts",
     "test:build": "npx parcel build --target test --no-cache",
     "test:run": "node ./dist/test/test.js",
-    "build": "npm run typecheck && npm run build:prepare && npm run build:build && npm run dts && npm run build:copy_static",
-    "build:prepare": "rm -rf ./target && rm -rf ./dist && mkdir ./target",
-    "build:build": "npx parcel build --target release --no-cache && cp ./dist/release/main.js ./target/e8.js",
+    "build": "npm run typecheck && npm run build:prepare && npm run build:build && npm run build:dts && npm run build:copy_static",
+    "build:prepare": "rm -rf ./target && rm -rf ./dist",
+    "build:build": "npx parcel build --target release --no-cache",
     "build:copy_static": "cp ./LICENSE ./target/ && cp ./README.md ./target && cp ./package-lock.json ./target && npm run build:cut_package",
-    "build:cut_package": "npx package-cutter --output ./target/package.json",
-    "dts": "npm run dts:generate && npm run dts:cleanup",
-    "dts:generate": "npx parcel build --target types --no-cache",
-    "dts:cleanup": "mv ./e8.d.ts ./target/e8.d.ts",
+    "build:cut_package": "npx package-cutter --output ./target/package.json --set types=\"e8.d.ts\"",
+    "build:dts": "npx parcel build --target types --no-cache",
+    "dev": "npm run build && (npm run dev:js & npm run dev:dts & wait)",
+    "dev:dts": "npx parcel watch --target types --no-cache",
+    "dev:js": "npx parcel watch --target release --no-cache",
     "pack": "npm run build && cd target && npm pack && mv *.tgz e8.tgz"
   },
   "devDependencies": {
     "@nartallax/clamsensor": "^2.0.10",
-    "@nartallax/package-cutter": "^1.0.2",
+    "@nartallax/package-cutter": "^1.0.4",
     "@parcel/packager-ts": "^2.12.0",
     "@parcel/plugin": "^2.12.0",
     "@parcel/transformer-glsl": "^2.12.0",
@@ -46,10 +47,12 @@
   },
   "targets": {
     "release": {
-      "source": "src/main.ts",
+      "distDir": "./target",
+      "source": "src/e8.ts",
       "context": "node",
       "isLibrary": true,
       "optimize": true,
+      "sourceMap": false,
       "outputFormat": "esmodule"
     },
     "test": {
@@ -59,7 +62,7 @@
       "outputFormat": "esmodule"
     },
     "types": {
-      "source": "src/main.ts",
+      "source": "src/e8.ts",
       "sourceMap": false
     }
   }

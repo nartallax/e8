@@ -7,3 +7,4 @@ dist
 src/proman/generated
 src/game/generated
 src/generated
+e8.d.ts
