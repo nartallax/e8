@@ -1,7 +1,6 @@
 import {InputBindSetImpl} from "user_input/input_bind_set"
-import {InputKey, knownMouseButtonInputs} from "user_input/inputs"
+import {InputKey, browserKeyboardCodeToInputKey, knownMouseButtonInputs} from "user_input/inputs"
 import {InputKeyActionSet, InputKeyActionSourceBind, InputKeyEvent} from "user_input/keys/input_key_action_set"
-import {fixInputKey} from "user_input/keys/input_key_utils"
 
 export class UserKeyInputController {
 	private activeBindSets: InputBindSetImpl[] = []
@@ -10,10 +9,16 @@ export class UserKeyInputController {
 	private readonly eventQueue: InputKeyEvent[] = []
 
 	private onKeyDown = (e: KeyboardEvent) => {
-		this.eventQueue.push({isDown: true, key: fixInputKey(e.code as InputKey)})
+		const key = browserKeyboardCodeToInputKey(e.code)
+		if(key !== null){
+			this.eventQueue.push({isDown: true, key})
+		}
 	}
 	private onKeyUp = (e: KeyboardEvent) => {
-		this.eventQueue.push({isDown: false, key: fixInputKey(e.code as InputKey)})
+		const key = browserKeyboardCodeToInputKey(e.code)
+		if(key !== null){
+			this.eventQueue.push({isDown: false, key})
+		}
 	}
 	private onMouseDown = (e: MouseEvent) =>
 		this.eventQueue.push({isDown: true, key: knownMouseButtonInputs[e.button]!})
@@ -88,6 +93,7 @@ export class UserKeyInputController {
 		this.rebuildActionSet()
 	}
 
+	// TODO: event here
 	notifyBindSetUpdated(bindSet: InputBindSetImpl): void {
 		if(this.isBindSetActive(bindSet)){
 			this.rebuildActionSet()

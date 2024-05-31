@@ -2,7 +2,6 @@ import {sortBy} from "common/sort_by"
 import {Chord} from "resource_pack/resource_pack"
 import {InputBindActionFn, InputBindActionsObj} from "types"
 import {InputKey} from "user_input/inputs"
-import {fixChord} from "user_input/keys/input_key_utils"
 
 export interface InputKeyEvent {
 	readonly isDown: boolean
@@ -108,9 +107,7 @@ export class InputKeyActionSet {
 			const groupKey = makeBindGroupKey(bind.bindSet, bind.bind)
 			const group = bindGroupMap.get(groupKey)!
 
-			for(const rawChord of bind.chords){
-				const chord = fixChord(rawChord)
-
+			for(const chord of bind.chords){
 				for(const primaryKey of chord){
 					let arr = resultMap.get(primaryKey)
 					if(!arr){

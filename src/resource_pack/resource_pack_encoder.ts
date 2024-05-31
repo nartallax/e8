@@ -1,5 +1,5 @@
 import {BinformatEncoder} from "common/binformat/binformat_encoder"
-import {InputKey, simplifyInputKey} from "user_input/inputs"
+import {InputKey} from "user_input/inputs"
 import {AltasPartWithLayer, Atlas, DeviatingValueRange, ResourcePack, StartEnd} from "resource_pack/resource_pack"
 import {ResourcePackDecoder} from "resource_pack/resource_pack_decoder"
 import {XY} from "types"
@@ -124,20 +124,16 @@ export class ResourcePackEncoder extends BinformatEncoder<ResourcePack> {
 					let modMask = 0
 					for(const key of chord){
 						switch(key){
-							case "AltLeft":
-							case "AltRight":
+							case "Alt":
 								modMask |= 1 << 0
 								continue
-							case "ControlLeft":
-							case "ControlRight":
+							case "Ctrl":
 								modMask |= 1 << 1
 								continue
-							case "ShiftLeft":
-							case "ShiftRight":
+							case "Shift":
 								modMask |= 1 << 2
 								continue
-							case "MetaLeft":
-							case "MetaRight":
+							case "Meta":
 								modMask |= 1 << 3
 								continue
 							default:
@@ -146,7 +142,7 @@ export class ResourcePackEncoder extends BinformatEncoder<ResourcePack> {
 						}
 					}
 					this.writeUint(modMask)
-					this.writeArray(mainKeys, key => this.writeString(simplifyInputKey(key)))
+					this.writeArray(mainKeys, key => this.writeString(key))
 				})
 			})
 		})

@@ -1,48 +1,55 @@
-module.exports = {
-	root: true,
-	parser: "@typescript-eslint/parser",
-	plugins: [
-		"@typescript-eslint"
-	],
-	extends: [
-		"eslint:recommended",
-		"plugin:@typescript-eslint/recommended"
-	],
-	ignorePatterns: [
+import eslint from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import globals from 'globals'
+
+let result = tseslint.config(
+  eslint.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+	files: ['**/*.{ts,tsx}'],
+	languageOptions: {
+      parserOptions: {
+		project: "./tsconfig.json",
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+      globals: {
+        ...globals.browser,
+      },
+    },
+	ignores: [
 		"**/js/**",
 		"node_modules",
 		"**/node_modules/**",
 		"**/generated/**",
 		"build",
-		".eslintrc.cjs"
+		"eslint.config.cjs"
 	],
-	parserOptions: {
-		parser: "@typescript-eslint/parser",
-		project: "./tsconfig.json",
-	},
 	rules: {
-		// у const есть свои применения, но требовать его вообще везде - значит загрязнять код
+		// const have its uses, but not EVERYTHING should be const
 		"prefer-const": "warn",
 
-		// у неймспейсов есть свои использования, запрещать их целиком неправильно
+		// rule for newbies; namespaces has their uses
 		"@typescript-eslint/no-namespace": "off",
 
-		// не дает нормально пользоваться неймспейсами
+		// that's also for namespaces
 		"no-inner-declarations": "off",
 
-		// это про `value!` например
-		// да, этот оператор теоретически может привести к ошибке
-		// но это всего лишь означает, что его нужно применять, когда ты на 100% уверен, что там нет null/undefined
-		// и такие ситуации есть
+		// you shouldn't use it too much, but there are situations where you are 100% sure that it's not null
+		// for example, array iteration by index
 		"@typescript-eslint/no-non-null-assertion": "off",
 
-		// для while(true) есть применения, не нужно его запрещать
+		// that's for while(true)
 		"no-constant-condition": ["error", {checkLoops: false}],
 
+		// I'm not stupid. If something is typed as any - it should be any
+		"@typescript-eslint/no-explicit-any": "off",
+		"@typescript-eslint/no-floating-promises": "error",
+		"@typescript-eslint/no-misused-promises": ["error", { "checksVoidReturn": false }],
 
 
-		/* Правила про codestyle
-    те, которые явно выключены - имеют аналогичное правило для тайпскрипта */
+		/* codestyle rules; disabled rules may be overriden by typescript rules */
 		indent: "off",
 		eqeqeq: ["warn", "always"],
 		curly: ["warn", "all"],
@@ -50,7 +57,7 @@ module.exports = {
 		"no-floating-decimal": ["warn"],
 		"no-lonely-if": ["warn"],
 		"no-useless-rename": ["warn"],
-		// бесит, когда линтер удаляет return, после которого я еще что-то хотел написать
+		// it's useful, I'm just furious when it's getting autocorrected mid-thought process, hence it's off
 		"no-useless-return": ["off"],
 		"quote-props": ["warn", "as-needed", {numbers: true}],
 		"spaced-comment": ["warn", "always", { "markers": ["/"]}],
@@ -93,8 +100,8 @@ module.exports = {
 		"space-in-parens": ["warn", "never"],
 		"space-infix-ops": "off",
 		"space-unary-ops": ["warn", {words: false, nonwords: false}],
-		// конфликтует со space-before-blocks
-		// например case 5: {} - пробел и должен, и не должен существовать
+		// conflicts with space-before-blocks
+		// for example, `case 5: {}` - space should and should not be there at the same time
 		"switch-colon-spacing": "off",
 		"template-curly-spacing": ["warn", "never"],
 		"template-tag-spacing": ["warn", "never"],
@@ -129,9 +136,8 @@ module.exports = {
 		"@typescript-eslint/semi": ["warn", "never"],
 		"@typescript-eslint/space-before-function-paren": ["warn", "never"],
 		"@typescript-eslint/space-infix-ops": ["warn"],
-		// I'm not stupid. If something is typed as any - it should be any
-		"@typescript-eslint/no-explicit-any": "off",
-		"@typescript-eslint/no-floating-promises": "error",
-		"@typescript-eslint/no-misused-promises": ["error", { "checksVoidReturn": false }]
 	}
 }
+);
+
+export default result

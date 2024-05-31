@@ -17,7 +17,7 @@ describe("InputKeyActionSet", () => {
 		const s = new InputKeyActionSet([{
 			...dfltBind,
 			bind: 1,
-			chords: [["KeyW"]],
+			chords: [["W"]],
 			handlers: {
 				onDown: down,
 				onHold: hold,
@@ -25,13 +25,13 @@ describe("InputKeyActionSet", () => {
 			}
 		}])
 
-		let res = s.findActions(new Set(), [{isDown: true, key: "KeyW"}])
+		let res = s.findActions(new Set(), [{isDown: true, key: "W"}])
 		expect(res.down).to.eql([{handler: down, count: 1, binds: new Set([1])}])
 		expect(res.hold).to.eql([{handler: hold, count: 2, binds: new Set([1])}])
 		expect(res.up).to.eql([])
-		expect(res.newDownKeys).to.eql(new Set(["KeyW"]))
+		expect(res.newDownKeys).to.eql(new Set(["W"]))
 
-		res = s.findActions(res.newDownKeys, [{isDown: false, key: "KeyW"}])
+		res = s.findActions(res.newDownKeys, [{isDown: false, key: "W"}])
 		expect(res.down).to.eql([])
 		expect(res.hold).to.eql([])
 		expect(res.up).to.eql([{handler: up, count: 1, binds: new Set([1])}])
@@ -45,18 +45,18 @@ describe("InputKeyActionSet", () => {
 		const s = new InputKeyActionSet([{
 			...dfltBind,
 			bind: 1,
-			chords: [["ControlRight"]], // let's also test chord normalization
+			chords: [["Ctrl"]],
 			handlers: {onHold: hold}
 		}])
 
-		let res = s.findActions(new Set(), [{isDown: true, key: "ControlLeft"}])
+		let res = s.findActions(new Set(), [{isDown: true, key: "Ctrl"}])
 		expect(res.hold).to.eql([{handler: hold, count: 2, binds: new Set([1])}])
 
 		// we just continue holding ctrl. nothing else going on.
 		res = s.findActions(res.newDownKeys, [])
 		expect(res.hold).to.eql([{handler: hold, count: 1, binds: new Set([1])}])
 
-		res = s.findActions(res.newDownKeys, [{isDown: false, key: "ControlLeft"}])
+		res = s.findActions(res.newDownKeys, [{isDown: false, key: "Ctrl"}])
 		expect(res.hold).to.eql([])
 	})
 
@@ -67,33 +67,33 @@ describe("InputKeyActionSet", () => {
 		const s = new InputKeyActionSet([{
 			...dfltBind,
 			bind: 0,
-			chords: [["KeyR"]],
+			chords: [["R"]],
 			handlers: {onDown: down}
 		}, {
 			...dfltBind,
 			bind: 1,
-			chords: [["ControlLeft", "KeyR"]],
+			chords: [["Ctrl", "R"]],
 			handlers: {onDown: down2}
 		}])
 
 		// Ctrl+R
-		let res = s.findActions(new Set(), [{isDown: true, key: "ControlLeft"}, {isDown: true, key: "KeyR"}])
+		let res = s.findActions(new Set(), [{isDown: true, key: "Ctrl"}, {isDown: true, key: "R"}])
 		expect(res.down).to.eql([{handler: down2, count: 1, binds: new Set([1])}])
 
 		// just R
-		res = s.findActions(new Set(), [{isDown: true, key: "KeyR"}])
+		res = s.findActions(new Set(), [{isDown: true, key: "R"}])
 		expect(res.down).to.eql([{handler: down, count: 1, binds: new Set([0])}])
 
 		// same thing, but in two steps
-		res = s.findActions(new Set(), [{isDown: true, key: "ControlLeft"}])
+		res = s.findActions(new Set(), [{isDown: true, key: "Ctrl"}])
 		expect(res.down).to.eql([])
-		res = s.findActions(res.newDownKeys, [{isDown: true, key: "KeyR"}])
+		res = s.findActions(res.newDownKeys, [{isDown: true, key: "R"}])
 		expect(res.down).to.eql([{handler: down2, count: 1, binds: new Set([1])}])
 
 		// same two steps, but in reverse
-		res = s.findActions(new Set(), [{isDown: true, key: "KeyR"}])
+		res = s.findActions(new Set(), [{isDown: true, key: "R"}])
 		expect(res.down).to.eql([{handler: down, count: 1, binds: new Set([0])}])
-		res = s.findActions(res.newDownKeys, [{isDown: true, key: "ControlLeft"}])
+		res = s.findActions(res.newDownKeys, [{isDown: true, key: "Ctrl"}])
 		expect(res.down).to.eql([{handler: down2, count: 1, binds: new Set([1])}])
 	})
 
@@ -105,37 +105,37 @@ describe("InputKeyActionSet", () => {
 		const s = new InputKeyActionSet([{
 			...dfltBind,
 			bind: 0,
-			chords: [["ControlLeft", "KeyR"]],
+			chords: [["Ctrl", "R"]],
 			handlers: {onDown: down}
 		}, {
 			...dfltBind,
 			bind: 1,
-			chords: [["ShiftLeft", "ControlLeft", "KeyR"]],
+			chords: [["Shift", "Ctrl", "R"]],
 			handlers: {onDown: down2}
 		}])
 
 		// Ctrl+R
-		let res = s.findActions(new Set(), [{isDown: true, key: "ControlLeft"}, {isDown: true, key: "KeyR"}])
+		let res = s.findActions(new Set(), [{isDown: true, key: "Ctrl"}, {isDown: true, key: "R"}])
 		expect(res.down).to.eql([{handler: down, count: 1, binds: new Set([0])}])
 
 		// Ctrl+Shift+R
-		res = s.findActions(new Set(), [{isDown: true, key: "ControlLeft"}, {isDown: true, key: "ShiftLeft"}, {isDown: true, key: "KeyR"}])
+		res = s.findActions(new Set(), [{isDown: true, key: "Ctrl"}, {isDown: true, key: "Shift"}, {isDown: true, key: "R"}])
 		expect(res.down).to.eql([{handler: down2, count: 1, binds: new Set([1])}])
 
 		// R, Ctrl, Shift
-		res = s.findActions(new Set(), [{isDown: true, key: "KeyR"}])
+		res = s.findActions(new Set(), [{isDown: true, key: "R"}])
 		expect(res.down).to.eql([])
-		res = s.findActions(res.newDownKeys, [{isDown: true, key: "ControlLeft"}])
+		res = s.findActions(res.newDownKeys, [{isDown: true, key: "Ctrl"}])
 		expect(res.down).to.eql([{handler: down, count: 1, binds: new Set([0])}])
-		res = s.findActions(res.newDownKeys, [{isDown: true, key: "ShiftLeft"}])
+		res = s.findActions(res.newDownKeys, [{isDown: true, key: "Shift"}])
 		expect(res.down).to.eql([{handler: down2, count: 1, binds: new Set([1])}])
 
 		// R, Shift, Ctrl
-		res = s.findActions(new Set(), [{isDown: true, key: "KeyR"}])
+		res = s.findActions(new Set(), [{isDown: true, key: "R"}])
 		expect(res.down).to.eql([])
-		res = s.findActions(res.newDownKeys, [{isDown: true, key: "ShiftLeft"}])
+		res = s.findActions(res.newDownKeys, [{isDown: true, key: "Shift"}])
 		expect(res.down).to.eql([])
-		res = s.findActions(res.newDownKeys, [{isDown: true, key: "ControlLeft"}])
+		res = s.findActions(res.newDownKeys, [{isDown: true, key: "Ctrl"}])
 		expect(res.down).to.eql([{handler: down2, count: 1, binds: new Set([1])}])
 	})
 
@@ -145,18 +145,18 @@ describe("InputKeyActionSet", () => {
 		const s = new InputKeyActionSet([{
 			...dfltBind,
 			bind: 0,
-			chords: [["KeyR"]],
+			chords: [["R"]],
 			handlers: {onDown: down}
 		}])
 
 		// Ctrl+W+R
-		let res = s.findActions(new Set(), [{isDown: true, key: "ControlLeft"}, {isDown: true, key: "KeyW"}, {isDown: true, key: "KeyR"}])
+		let res = s.findActions(new Set(), [{isDown: true, key: "Ctrl"}, {isDown: true, key: "W"}, {isDown: true, key: "R"}])
 		expect(res.down).to.eql([{handler: down, count: 1, binds: new Set([0])}])
 
 		// Ctrl+W, then R
-		res = s.findActions(new Set(), [{isDown: true, key: "ControlLeft"}, {isDown: true, key: "KeyW"}])
+		res = s.findActions(new Set(), [{isDown: true, key: "Ctrl"}, {isDown: true, key: "W"}])
 		expect(res.down).to.eql([])
-		res = s.findActions(new Set(), [{isDown: true, key: "KeyR"}])
+		res = s.findActions(new Set(), [{isDown: true, key: "R"}])
 		expect(res.down).to.eql([{handler: down, count: 1, binds: new Set([0])}])
 	})
 
@@ -167,16 +167,16 @@ describe("InputKeyActionSet", () => {
 		const s = new InputKeyActionSet([{
 			...dfltBind,
 			bind: 0,
-			chords: [["AltLeft", "KeyR"]],
+			chords: [["Alt", "R"]],
 			handlers: {onDown: down}
 		}, {
 			...dfltBind,
 			bind: 1,
-			chords: [["ShiftLeft", "ControlLeft", "KeyR"]],
+			chords: [["Shift", "Ctrl", "R"]],
 			handlers: {onDown: down2}
 		}])
 
-		const res = s.findActions(new Set(), [{isDown: true, key: "ControlLeft"}, {isDown: true, key: "AltLeft"}, {isDown: true, key: "ShiftLeft"}, {isDown: true, key: "KeyR"}])
+		const res = s.findActions(new Set(), [{isDown: true, key: "Ctrl"}, {isDown: true, key: "Alt"}, {isDown: true, key: "Shift"}, {isDown: true, key: "R"}])
 		expect(res.down).to.eql([
 			{handler: down, count: 1, binds: new Set([0])},
 			{handler: down2, count: 1, binds: new Set([1])}
@@ -187,13 +187,13 @@ describe("InputKeyActionSet", () => {
 		const s = new InputKeyActionSet([{
 			...dfltBind,
 			bind: 0,
-			chords: [["ControlLeft", "KeyR"]],
+			chords: [["Ctrl", "R"]],
 			handlers: {onDown: down}
 		}])
 
-		let res = s.findActions(new Set(), [{isDown: true, key: "ControlLeft"}, {isDown: true, key: "KeyR"}])
+		let res = s.findActions(new Set(), [{isDown: true, key: "Ctrl"}, {isDown: true, key: "R"}])
 		expect(res.down).to.eql([{handler: down, count: 1, binds: new Set([0])}])
-		res = s.findActions(res.newDownKeys, [{isDown: true, key: "ShiftLeft"}])
+		res = s.findActions(res.newDownKeys, [{isDown: true, key: "Shift"}])
 		expect(res.down).to.eql([])
 	})
 
@@ -204,13 +204,13 @@ describe("InputKeyActionSet", () => {
 		const s = new InputKeyActionSet([{
 			...dfltBind,
 			bind: 0,
-			chords: [["ControlLeft", "KeyR"]],
+			chords: [["Ctrl", "R"]],
 			handlers: {onDown: down}
 		}])
 
-		let res = s.findActions(new Set(), [{isDown: true, key: "ControlLeft"}, {isDown: true, key: "KeyR"}])
+		let res = s.findActions(new Set(), [{isDown: true, key: "Ctrl"}, {isDown: true, key: "R"}])
 		expect(res.down).to.eql([{handler: down, count: 1, binds: new Set([0])}])
-		res = s.findActions(res.newDownKeys, [{isDown: true, key: "ControlLeft"}])
+		res = s.findActions(res.newDownKeys, [{isDown: true, key: "Ctrl"}])
 		expect(res.down).to.eql([])
 	})
 
@@ -220,11 +220,11 @@ describe("InputKeyActionSet", () => {
 		const s = new InputKeyActionSet([{
 			...dfltBind,
 			bind: 0,
-			chords: [["KeyW"]],
+			chords: [["W"]],
 			handlers: {onHold: hold}
 		}])
 
-		const res = s.findActions(new Set(), [{isDown: true, key: "KeyW"}, {isDown: false, key: "KeyW"}])
+		const res = s.findActions(new Set(), [{isDown: true, key: "W"}, {isDown: false, key: "W"}])
 		expect(res.hold).to.eql([{handler: hold, count: 1, binds: new Set([0])}])
 	})
 
@@ -238,11 +238,11 @@ describe("InputKeyActionSet", () => {
 		const s = new InputKeyActionSet([{
 			...dfltBind,
 			bind: 0,
-			chords: [["KeyW"]],
+			chords: [["W"]],
 			handlers: {onHold: hold}
 		}])
 
-		const res = s.findActions(new Set(), [{isDown: true, key: "KeyW"}, {isDown: false, key: "KeyW"}, {isDown: true, key: "KeyW"}, {isDown: false, key: "KeyW"}])
+		const res = s.findActions(new Set(), [{isDown: true, key: "W"}, {isDown: false, key: "W"}, {isDown: true, key: "W"}, {isDown: false, key: "W"}])
 		expect(res.hold).to.eql([{handler: hold, count: 2, binds: new Set([0])}])
 	})
 
@@ -251,11 +251,11 @@ describe("InputKeyActionSet", () => {
 		const s = new InputKeyActionSet([{
 			...dfltBind,
 			bind: 0,
-			chords: [["KeyA"], ["KeyB"]],
+			chords: [["A"], ["B"]],
 			handlers: {onDown: down}
 		}])
 
-		const res = s.findActions(new Set(), [{isDown: true, key: "KeyA"}, {isDown: true, key: "KeyB"}])
+		const res = s.findActions(new Set(), [{isDown: true, key: "A"}, {isDown: true, key: "B"}])
 		expect(res.down).to.eql([{handler: down, count: 2, binds: new Set([0])}])
 	})
 
@@ -264,11 +264,11 @@ describe("InputKeyActionSet", () => {
 		const s = new InputKeyActionSet([{
 			...dfltBind,
 			bind: 0,
-			chords: [["ShiftLeft"]],
+			chords: [["Shift"]],
 			handlers: {onDown: down}
 		}])
 
-		const res = s.findActions(new Set(), [{isDown: true, key: "ShiftLeft"}, {isDown: true, key: "ShiftLeft"}])
+		const res = s.findActions(new Set(), [{isDown: true, key: "Shift"}, {isDown: true, key: "Shift"}])
 		expect(res.down).to.eql([{handler: down, count: 1, binds: new Set([0])}])
 	})
 
@@ -277,16 +277,16 @@ describe("InputKeyActionSet", () => {
 		const s = new InputKeyActionSet([{
 			...dfltBind,
 			bind: 0,
-			chords: [["KeyR"]],
+			chords: [["R"]],
 			handlers: {onDown: down}
 		}, {
 			...dfltBind,
 			bind: 1,
-			chords: [["KeyR"]],
+			chords: [["R"]],
 			handlers: {onDown: down2}
 		}])
 
-		const res = s.findActions(new Set(), [{isDown: true, key: "KeyR"}])
+		const res = s.findActions(new Set(), [{isDown: true, key: "R"}])
 		expect(res.down).to.eql([{handler: down, count: 1, binds: new Set([0])}, {handler: down2, count: 1, binds: new Set([1])}])
 	})
 
@@ -294,16 +294,16 @@ describe("InputKeyActionSet", () => {
 		const s = new InputKeyActionSet([{
 			...dfltBind,
 			bind: 0,
-			chords: [["ControlLeft", "KeyR"]],
+			chords: [["Ctrl", "R"]],
 			handlers: {onDown: down}
 		}, {
 			...dfltBind,
 			bind: 1,
-			chords: [["ControlLeft", "KeyR"]],
+			chords: [["Ctrl", "R"]],
 			handlers: {onDown: down2}
 		}])
 
-		const res = s.findActions(new Set(), [{isDown: true, key: "ControlLeft"}, {isDown: true, key: "KeyR"}])
+		const res = s.findActions(new Set(), [{isDown: true, key: "Ctrl"}, {isDown: true, key: "R"}])
 		expect(res.down).to.eql([{handler: down, count: 1, binds: new Set([0])}, {handler: down2, count: 1, binds: new Set([1])}])
 	})
 
@@ -314,28 +314,28 @@ describe("InputKeyActionSet", () => {
 		const s = new InputKeyActionSet([{
 			...dfltBind,
 			bind: 0,
-			chords: [["KeyW"]],
+			chords: [["W"]],
 			group: 0,
 			handlers: {onHold: hold}
 		}, {
 			...dfltBind,
 			bind: 1,
-			chords: [["KeyD"]],
+			chords: [["D"]],
 			group: 0,
 			handlers: {onHold: hold}
 		}])
 
-		let res = s.findActions(new Set(), [{isDown: true, key: "KeyW"}, {isDown: true, key: "KeyD"}])
+		let res = s.findActions(new Set(), [{isDown: true, key: "W"}, {isDown: true, key: "D"}])
 		expect(res.hold).to.eql([{handler: hold, count: 5, binds: new Set([0, 1])}])
 		res = s.findActions(res.newDownKeys, [])
 		expect(res.hold).to.eql([{handler: hold, count: 2, binds: new Set([0, 1])}])
-		res = s.findActions(res.newDownKeys, [{isDown: false, key: "KeyW"}])
+		res = s.findActions(res.newDownKeys, [{isDown: false, key: "W"}])
 		expect(res.hold).to.eql([{handler: hold, count: 1, binds: new Set([1])}])
-		res = s.findActions(res.newDownKeys, [{isDown: false, key: "KeyD"}])
+		res = s.findActions(res.newDownKeys, [{isDown: false, key: "D"}])
 		expect(res.hold).to.eql([])
-		res = s.findActions(res.newDownKeys, [{isDown: true, key: "KeyW"}])
+		res = s.findActions(res.newDownKeys, [{isDown: true, key: "W"}])
 		expect(res.hold).to.eql([{handler: hold, count: 2, binds: new Set([0])}])
-		res = s.findActions(res.newDownKeys, [{isDown: true, key: "KeyD"}])
+		res = s.findActions(res.newDownKeys, [{isDown: true, key: "D"}])
 		expect(res.hold).to.eql([{handler: hold, count: 4, binds: new Set([0, 1])}])
 	})
 })

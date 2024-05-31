@@ -4,8 +4,8 @@ import {ResourcePackDecoder} from "resource_pack/resource_pack_decoder"
 import {ResourcePackEncoder} from "resource_pack/resource_pack_encoder"
 import type {Engine, EngineLoader} from "types"
 
-export {knownMouseButtonInputs} from "user_input/inputs"
-export {chordToString, fixChord} from "user_input/keys/input_key_utils"
+export {browserKeyboardCodeToInputKey as browserKeyboardKeyToInputKey} from "user_input/inputs"
+export {knownMouseButtonInputs, knownKeyboardInputs, knownMouseWheelInputs} from "user_input/inputs"
 
 export type {Engine, XY} from "types"
 export type {ResourcePack} from "resource_pack/resource_pack"

@@ -1,5 +1,5 @@
 import {BinformatDecoder} from "common/binformat/binformat_decoder"
-import {unsimplifyInputKey} from "user_input/inputs"
+import {InputKey} from "user_input/inputs"
 import {AltasPartWithLayer, Atlas, AtlasPicture, Chord, DeviatingValueRange, InputBindDefinition, InputBindSetDefinition, LayerDefinition, Model, ParticleDefinition, ResourcePack, StartEnd} from "resource_pack/resource_pack"
 import {XY} from "types"
 
@@ -125,18 +125,18 @@ export class ResourcePackDecoder extends BinformatDecoder<ResourcePack> {
 					isHold,
 					defaultChords: this.readArray((): Chord => {
 						const modMask = this.readUint()
-						const keys = this.readArray(() => unsimplifyInputKey(this.readString()))
+						const keys = this.readArray(() => this.readString() as InputKey)
 						if(modMask & (1 << 0)){
-							keys.push("AltLeft")
+							keys.push("Alt")
 						}
 						if(modMask & (1 << 1)){
-							keys.push("ControlLeft")
+							keys.push("Ctrl")
 						}
 						if(modMask & (1 << 2)){
-							keys.push("ShiftLeft")
+							keys.push("Shift")
 						}
 						if(modMask & (1 << 3)){
-							keys.push("MetaLeft")
+							keys.push("Meta")
 						}
 						return keys
 					})
