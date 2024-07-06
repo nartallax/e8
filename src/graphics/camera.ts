@@ -1,7 +1,7 @@
 import {EngineImpl} from "glue/engine"
 import {EntityImpl} from "glue/entity"
 import {EventImpl} from "glue/event"
-import {XY, Camera} from "types"
+import {XY, Camera, CursorMoveInputEvent} from "types"
 
 export class CameraImpl implements Camera<number, EntityImpl> {
 
@@ -80,7 +80,8 @@ export class CameraImpl implements Camera<number, EntityImpl> {
 		this._mousePanY.animationDuration = durationSeconds
 	}
 
-	setCursorPosition(xy: XY): void {
+	private onPanByCursor = (e: CursorMoveInputEvent): void => {
+		const xy = e.inworldCoords
 		const x = xy.x - this.x
 		const y = xy.y - this.y
 		// this check is here to prevent (almost) infinite loop camera pans - cursor is updated - camera pans - ...
@@ -154,6 +155,14 @@ export class CameraImpl implements Camera<number, EntityImpl> {
 
 	setCursorPanMultiplier(multiplier: number): void {
 		this.cursorPanMultiplier = multiplier
+		const evt = this.engine.input.cursorController.onFrameCursorChange
+		if(multiplier === 0){
+			this._mousePanX.set(0)
+			this._mousePanY.set(0)
+			evt.unsub(this.onPanByCursor)
+		} else {
+			evt.sub(this.onPanByCursor)
+		}
 	}
 
 	updateScreenSize(width: number, height: number): void {

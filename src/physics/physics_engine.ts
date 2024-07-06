@@ -13,6 +13,7 @@ export type EntityPhysFieldType = Matter.Body | null
 // if average body size is around 1, weird effects start to happen
 // bodies getting stuck into each other etc
 // so in engine everything is this times bigger
+// TODO: feels like we should reuse inworldUnitPixelSize here
 const engineCoordsMult = 100
 
 export class PhysicsEngine {

@@ -55,7 +55,6 @@ export interface InputKeyActionSourceBind {
 	readonly handlers: InputBindActionsObj<number>
 	readonly chords: readonly Chord[]
 	readonly bind: number
-	readonly bindSet: number
 	readonly group: number | null
 }
 
@@ -75,11 +74,10 @@ export class InputKeyActionSet {
 
 	constructor(binds: readonly InputKeyActionSourceBind[]) {
 		let group = binds.map(x => x.group).reduce((a, b) => Math.max(a ?? -1, b ?? -1), -1) ?? -1
-		const bindToGroupMap = new Map<string, number>()
+		const bindToGroupMap = new Map<number, number>()
 		for(const bind of binds){
-			const key = makeBindGroupKey(bind.bindSet, bind.bind)
-			if(!bindToGroupMap.has(key)){
-				bindToGroupMap.set(key, bind.group ?? ++group)
+			if(!bindToGroupMap.has(bind.bind)){
+				bindToGroupMap.set(bind.bind, bind.group ?? ++group)
 			}
 		}
 		this.totalGroupsCount = group + 1
@@ -96,7 +94,7 @@ export class InputKeyActionSet {
 		this.holdActions = this.buildActionMap(binds, bindToGroupMap, "onHold")
 	}
 
-	private buildActionMap(binds: readonly InputKeyActionSourceBind[], bindGroupMap: ReadonlyMap<string, number>, type: keyof InputBindActionsObj<number>): ActionMap {
+	private buildActionMap(binds: readonly InputKeyActionSourceBind[], bindGroupMap: ReadonlyMap<number, number>, type: keyof InputBindActionsObj<number>): ActionMap {
 		const resultMap = new Map<InputKey, Action[]>()
 		for(const bind of binds){
 			const handler = bind.handlers[type]
@@ -104,8 +102,7 @@ export class InputKeyActionSet {
 				continue
 			}
 
-			const groupKey = makeBindGroupKey(bind.bindSet, bind.bind)
-			const group = bindGroupMap.get(groupKey)!
+			const group = bindGroupMap.get(bind.bind)!
 
 			for(const chord of bind.chords){
 				for(const primaryKey of chord){
@@ -324,8 +321,4 @@ class BitSet {
 
 function dropNulls<T>(arr: readonly (T | null)[]): T[] {
 	return arr.filter((x): x is T => x !== null)
-}
-
-function makeBindGroupKey(bindSet: number, bind: number): string {
-	return bindSet + "|" + bind
 }

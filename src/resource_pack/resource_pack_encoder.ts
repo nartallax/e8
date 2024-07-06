@@ -115,35 +115,33 @@ export class ResourcePackEncoder extends BinformatEncoder<ResourcePack> {
 			this.writeAtlasPartWithLayer(particle.texture, resourcePack.atlasses)
 		})
 
-		this.writeArray(resourcePack.inputBinds, bindSet => {
-			this.writeArray(bindSet.binds, bind => {
-				this.writeUint(bind.group === null ? 0 : bind.group + 1)
-				this.writeBool(bind.isHold)
-				this.writeArray(bind.defaultChords, chord => {
-					const mainKeys: InputKey[] = []
-					let modMask = 0
-					for(const key of chord){
-						switch(key){
-							case "Alt":
-								modMask |= 1 << 0
-								continue
-							case "Ctrl":
-								modMask |= 1 << 1
-								continue
-							case "Shift":
-								modMask |= 1 << 2
-								continue
-							case "Meta":
-								modMask |= 1 << 3
-								continue
-							default:
-								mainKeys.push(key)
-								continue
-						}
+		this.writeArray(resourcePack.inputBinds, bind => {
+			this.writeUint(bind.group === null ? 0 : bind.group + 1)
+			this.writeBool(bind.isHold)
+			this.writeArray(bind.defaultChords, chord => {
+				const mainKeys: InputKey[] = []
+				let modMask = 0
+				for(const key of chord){
+					switch(key){
+						case "Alt":
+							modMask |= 1 << 0
+							continue
+						case "Ctrl":
+							modMask |= 1 << 1
+							continue
+						case "Shift":
+							modMask |= 1 << 2
+							continue
+						case "Meta":
+							modMask |= 1 << 3
+							continue
+						default:
+							mainKeys.push(key)
+							continue
 					}
-					this.writeUint(modMask)
-					this.writeArray(mainKeys, key => this.writeString(key))
-				})
+				}
+				this.writeUint(modMask)
+				this.writeArray(mainKeys, key => this.writeString(key))
 			})
 		})
 	}

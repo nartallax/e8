@@ -1,12 +1,15 @@
-import {InputBindSetImpl} from "user_input/input_bind_set"
+import {InputBindDefinition} from "resource_pack/resource_pack"
+import {InputBindActions, InputBindActionsObj} from "types"
 import {InputKey, browserKeyboardCodeToInputKey, knownMouseButtonInputs} from "user_input/inputs"
 import {InputKeyActionSet, InputKeyActionSourceBind, InputKeyEvent} from "user_input/keys/input_key_action_set"
 
 export class UserKeyInputController {
-	private activeBindSets: InputBindSetImpl[] = []
 	private downKeys: ReadonlySet<InputKey> = new Set()
 	private actionSet = new InputKeyActionSet([])
 	private readonly eventQueue: InputKeyEvent[] = []
+	private bindActionHandlers: InputBindActionsObj<number>[] = []
+
+	constructor(private readonly bindDefs: readonly InputBindDefinition[]) {}
 
 	private onKeyDown = (e: KeyboardEvent) => {
 		const key = browserKeyboardCodeToInputKey(e.code)
@@ -71,63 +74,52 @@ export class UserKeyInputController {
 		this.clear()
 	}
 
-	activateBindSet(bindSet: InputBindSetImpl): void {
-		if(this.isBindSetActive(bindSet)){
-			throw new Error("Bind set is already active")
-		}
-		this.activeBindSets.push(bindSet)
-		if(this.activateBindSet.length === 1){
-			this.subscribe()
-		}
+	setBindHandlers(actionHandlers: {[x: number]: InputBindActions<number> | (() => void)}): void {
+		this.bindActionHandlers = actionsObjectToArray(this.bindDefs, actionHandlers)
 		this.rebuildActionSet()
-	}
-
-	deactivateBindSet(bindSet: InputBindSetImpl): void {
-		if(!this.isBindSetActive(bindSet)){
-			throw new Error("Bind set is already not active")
-		}
-		this.activeBindSets = this.activeBindSets.filter(x => x !== bindSet)
-		if(this.activeBindSets.length === 0){
-			this.unsubscribe()
-		}
-		this.rebuildActionSet()
-	}
-
-	// TODO: event here
-	notifyBindSetUpdated(bindSet: InputBindSetImpl): void {
-		if(this.isBindSetActive(bindSet)){
-			this.rebuildActionSet()
-		}
+		this.subscribe()
+		// TODO: shutdown procedure for this controller
+		void this.unsubscribe
 	}
 
 	private rebuildActionSet(): void {
 		const binds: InputKeyActionSourceBind[] = []
-		for(const bindSet of this.activeBindSets){
-			for(let bindIndex = 0; bindIndex < bindSet.def.binds.length; bindIndex++){
-				const handlers = bindSet.bindActionHandlers[bindIndex]
-				if(!handlers){
-					continue
-				}
-
-				const bind = bindSet.def.binds[bindIndex]!
-				binds.push({
-					bind: bindIndex,
-					bindSet: bindSet.index,
-					chords: bind.defaultChords,
-					group: bind.group,
-					handlers
-				})
+		for(let bindIndex = 0; bindIndex < this.bindDefs.length; bindIndex++){
+			const handlers = this.bindActionHandlers[bindIndex]
+			if(!handlers){
+				continue
 			}
+
+			const bind = this.bindDefs[bindIndex]!
+			binds.push({
+				bind: bindIndex,
+				chords: bind.defaultChords,
+				group: bind.group,
+				handlers
+			})
 		}
 		this.actionSet = new InputKeyActionSet(binds)
-	}
-
-	isBindSetActive(bindSet: InputBindSetImpl): boolean {
-		return !!this.activeBindSets.find(x => x === bindSet)
 	}
 
 	clear(): void {
 		this.downKeys = new Set()
 		this.eventQueue.length = 0
 	}
+}
+
+function actionsObjectToArray(binds: readonly InputBindDefinition[], obj: {readonly [key: number]: InputBindActions<number>}): InputBindActionsObj<number>[] {
+	let i = -1
+	const result: InputBindActionsObj<number>[] = []
+	while(true){
+		let value = obj[++i]
+		if(!value){
+			break
+		}
+		if(typeof(value) === "function"){
+			const bindDef = binds[i]!
+			value = bindDef.isHold ? {onHold: value} : {onDown: value}
+		}
+		result.push(value)
+	}
+	return result
 }

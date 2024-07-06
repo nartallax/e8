@@ -24,16 +24,12 @@ export interface EngineOptions {
 	readonly debugStatsDumpRate?: number
 }
 
-export interface BindSetMapBase {
-	readonly [bindSetIndex: number]: number
-}
-
-export interface Engine<EntityIndex = number, BindSetMap extends BindSetMapBase = BindSetMapBase, ParticleIndex = number> {
+export interface Engine<EntityIndex = number, Binds extends number = number, ParticleIndex = number> {
 	readonly camera: Camera<EntityIndex, Entity<EntityIndex>>
 	/** Amount of time passed while engine was running, in seconds. */
 	readonly timePassed: number
-	/** Having index of a bind set, get an object to control actions on that bind set */
-	getInputBindSet<const BindSetIndex extends keyof BindSetMap & number>(index: BindSetIndex): InputBindSet<BindSetMap[BindSetIndex]>
+	setBindHandlers(actionHandlers: {[bindIndex in Binds]: InputBindActions<Binds>}): void
+	setTickCursorHandler(handler: ((event: CursorMoveInputEvent) => void) | null): void
 	getLastKnownCursorEvent(): CursorMoveInputEvent
 	/** Event "ingame tick is about to be processed" */
 	readonly onTick: Event<[deltaTime: number]>
@@ -57,18 +53,6 @@ export interface EngineLoader<E extends Engine> {
 	/** Register some class as entity class
 	 * If you don't need to add any logic to entity - you may omit class, empty class will be created for you */
 	registerEntity<I extends IndexTypeOfEngine<E>, T extends Entity<I>>(entity: I, cls?: EntityClassBase<I, T>): EntityClass<I, T>
-}
-
-/** A set of user input bindings. Can be toggled all at once.
- * Works as a helper for user input handling */
-export interface InputBindSet<Binds extends number> {
-	readonly isActive: boolean
-	setBindHandlers(actionHandlers: {[bindIndex in Binds]: InputBindActions<Binds>}): void
-	setTickCursorHandler(handler: ((event: CursorMoveInputEvent) => void) | null): void
-	// other cursor pan settings are in the camera
-	setCursorPan(isEnabled: boolean): void
-	activate(): void
-	deactivate(): void
 }
 
 export interface CursorMoveInputEvent {

@@ -1,6 +1,6 @@
 import {BinformatDecoder} from "common/binformat/binformat_decoder"
 import {InputKey} from "user_input/inputs"
-import {AltasPartWithLayer, Atlas, AtlasPicture, Chord, DeviatingValueRange, InputBindDefinition, InputBindSetDefinition, LayerDefinition, Model, ParticleDefinition, ResourcePack, StartEnd} from "resource_pack/resource_pack"
+import {AltasPartWithLayer, Atlas, AtlasPicture, Chord, DeviatingValueRange, InputBindDefinition, LayerDefinition, Model, ParticleDefinition, ResourcePack, StartEnd} from "resource_pack/resource_pack"
 import {XY} from "types"
 
 export class ResourcePackDecoder extends BinformatDecoder<ResourcePack> {
@@ -115,34 +115,32 @@ export class ResourcePackDecoder extends BinformatDecoder<ResourcePack> {
 			return {amount, size, rotation, color, distance, lifetime, angle, texture}
 		})
 
-		const inputBinds = this.readArray((): InputBindSetDefinition => ({
-			binds: this.readArray((): InputBindDefinition => {
-				let inputGroup: number | null = this.readUint()
-				inputGroup = inputGroup === 0 ? null : inputGroup - 1
-				const isHold = this.readBool()
-				return {
-					group: inputGroup,
-					isHold,
-					defaultChords: this.readArray((): Chord => {
-						const modMask = this.readUint()
-						const keys = this.readArray(() => this.readString() as InputKey)
-						if(modMask & (1 << 0)){
-							keys.push("Alt")
-						}
-						if(modMask & (1 << 1)){
-							keys.push("Ctrl")
-						}
-						if(modMask & (1 << 2)){
-							keys.push("Shift")
-						}
-						if(modMask & (1 << 3)){
-							keys.push("Meta")
-						}
-						return keys
-					})
-				}
-			})
-		}))
+		const inputBinds = this.readArray((): InputBindDefinition => {
+			let inputGroup: number | null = this.readUint()
+			inputGroup = inputGroup === 0 ? null : inputGroup - 1
+			const isHold = this.readBool()
+			return {
+				group: inputGroup,
+				isHold,
+				defaultChords: this.readArray((): Chord => {
+					const modMask = this.readUint()
+					const keys = this.readArray(() => this.readString() as InputKey)
+					if(modMask & (1 << 0)){
+						keys.push("Alt")
+					}
+					if(modMask & (1 << 1)){
+						keys.push("Ctrl")
+					}
+					if(modMask & (1 << 2)){
+						keys.push("Shift")
+					}
+					if(modMask & (1 << 3)){
+						keys.push("Meta")
+					}
+					return keys
+				})
+			}
+		})
 
 		return {inworldUnitPixelSize, atlasses, models, particles, layers, collisionGroupPairs, collisionGroupCount, inputBinds}
 	}

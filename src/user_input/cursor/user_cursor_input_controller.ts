@@ -3,6 +3,7 @@ import {CursorMoveInputEvent, XY} from "types"
 import {UserInputController} from "user_input/user_input_controller"
 
 export class UserCursorInputController {
+	private userTickHandler: ((event: CursorMoveInputEvent) => void) | null = null
 	private lastKnownCursorEvent: MouseEvent | TouchEvent | null = null
 	private currentRevision = 0
 
@@ -60,6 +61,16 @@ export class UserCursorInputController {
 		window.removeEventListener("mousemove", this.onMove)
 		window.removeEventListener("touchmove", this.onMove)
 		this.clear()
+	}
+
+	setUserTickCursorHandler(handler: ((event: CursorMoveInputEvent) => void) | null): void {
+		if(handler){
+			this.onTickCursorChange.sub(handler)
+		}
+		if(this.userTickHandler){
+			this.onTickCursorChange.unsub(this.userTickHandler)
+		}
+		this.userTickHandler = handler
 	}
 }
 

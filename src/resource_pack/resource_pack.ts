@@ -9,7 +9,7 @@ export interface ResourcePack {
 	readonly layers: readonly LayerDefinition[]
 	readonly collisionGroupCount: number
 	readonly collisionGroupPairs: readonly (readonly [number, number])[]
-	readonly inputBinds: readonly InputBindSetDefinition[]
+	readonly inputBinds: readonly InputBindDefinition[]
 	readonly particles: readonly ParticleDefinition[]
 }
 
@@ -44,12 +44,6 @@ export type LayerType = "particle" | "model"
 
 export interface LayerDefinition {
 	readonly type: LayerType
-}
-
-/** Some list of user actions.
- * This list can be toggled on and off. */
-export interface InputBindSetDefinition {
-	readonly binds: readonly InputBindDefinition[]
 }
 
 /** One action that can be triggered by user input */

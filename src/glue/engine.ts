@@ -3,12 +3,12 @@ import {Perf} from "glue/perfometer"
 import {CameraImpl} from "graphics/camera"
 import {GraphicEngine} from "graphics/graphics_engine"
 import {PhysicsEngine} from "physics/physics_engine"
-import {InputBindSet, XY, CursorMoveInputEvent, Engine, EngineOptions} from "types"
+import {XY, CursorMoveInputEvent, Engine, EngineOptions, InputBindActions} from "types"
 import {UserInputController} from "user_input/user_input_controller"
 
 const defaultFrameSkipTime = 0.25
 
-export class EngineImpl implements Engine<number, {[key: number]: number}, number> {
+export class EngineImpl implements Engine<number, number, number> {
 
 	private readonly frameSkipCutoff: number
 	readonly timePerTick: number
@@ -105,10 +105,6 @@ export class EngineImpl implements Engine<number, {[key: number]: number}, numbe
 		cancelAnimationFrame(this.requestedFrame)
 	}
 
-	getInputBindSet<const BindSetIndex extends number>(index: BindSetIndex): InputBindSet<number> {
-		return this.input.getBindSet(index)
-	}
-
 	getLastKnownCursorEvent(): CursorMoveInputEvent {
 		return this.input.cursorController.onTickCursorChange.getLastKnownEvent()
 	}
@@ -119,5 +115,12 @@ export class EngineImpl implements Engine<number, {[key: number]: number}, numbe
 		this.graphics.emitParticles(particleDefIndex, position, direction)
 	}
 
+	setBindHandlers(actionHandlers: Record<number, InputBindActions<number>>): void {
+		this.input.keyController.setBindHandlers(actionHandlers)
+	}
+
+	setTickCursorHandler(handler: ((event: CursorMoveInputEvent) => void) | null): void {
+		this.input.cursorController.setUserTickCursorHandler(handler)
+	}
 
 }
