@@ -34,6 +34,13 @@ export class ResourcePackDecoder extends BinformatDecoder<ResourcePack> {
 		return {x, y}
 	}
 
+	private readNullable<T>(readValue: () => T): T | null {
+		if(!this.readBool()){
+			return null
+		}
+		return readValue()
+	}
+
 	private readAtlasPartWithLayer(atlasses: Atlas[]): AltasPartWithLayer {
 		const layer = this.readUint()
 		const atlasIndex = this.readUint()
@@ -82,7 +89,7 @@ export class ResourcePackDecoder extends BinformatDecoder<ResourcePack> {
 			const x = this.readUint()
 			const y = this.readUint()
 			const modelSize = [x, y] as const
-			const texture = this.readAtlasPartWithLayer(atlasses)
+			const texture = this.readNullable(() => this.readAtlasPartWithLayer(atlasses))
 			const isStatic = this.readBool()
 			const collisionGroup = this.readUint()
 

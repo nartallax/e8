@@ -92,7 +92,12 @@ export class GraphicEngine {
 		if(entity.graphics !== null){
 			throw new Error("Assertion failed: double-add graphics")
 		}
+
 		const def = this.rp.models[entity.index]!
+		if(!def.texture){
+			return
+		}
+
 		const layer = this.layers[def.texture.layer] as GraphicLayer<MainShader>
 		const instance = layer.makeInstance()
 		entity.graphics = instance
@@ -110,6 +115,12 @@ export class GraphicEngine {
 		if(entity.graphics === null){
 			throw new Error("Assertion failed: double-delete graphics")
 		}
+
+		const def = this.rp.models[entity.index]!
+		if(!def.texture){
+			return
+		}
+
 		entity.graphics.delete()
 		this.visibleEntities.delete(entity)
 	}

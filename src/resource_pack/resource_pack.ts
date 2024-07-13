@@ -85,7 +85,7 @@ export interface AtlasPicture {
 export interface Model {
 	/** Width and height in ingame units. */
 	readonly size: XYTuple
-	readonly texture: AltasPartWithLayer
+	readonly texture: AltasPartWithLayer | null
 	readonly physics: ModelPhysics
 }
 

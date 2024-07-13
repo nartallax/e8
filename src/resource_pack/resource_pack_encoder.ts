@@ -30,6 +30,14 @@ export class ResourcePackEncoder extends BinformatEncoder<ResourcePack> {
 		this.writeDefaultFloat(range.maxDeviation)
 	}
 
+	private writeNullable<T>(value: T | null, writer: (value: T) => void): void {
+		if(value === null){
+			this.writeBool(false)
+			return
+		}
+		writer(value)
+	}
+
 	private writeAtlasPartWithLayer(texture: AltasPartWithLayer, atlasses: readonly Atlas[]): void {
 		const atlas = atlasses[texture.atlasIndex]!
 		this.writeUint(texture.layer)
@@ -86,7 +94,7 @@ export class ResourcePackEncoder extends BinformatEncoder<ResourcePack> {
 		this.writeArray(resourcePack.models, model => {
 			this.writeUint(model.size[0])
 			this.writeUint(model.size[1])
-			this.writeAtlasPartWithLayer(model.texture, resourcePack.atlasses)
+			this.writeNullable(model.texture, texture => this.writeAtlasPartWithLayer(texture, resourcePack.atlasses))
 			this.writeBool(model.physics.isStatic)
 			this.writeUint(model.physics.collisionGroup)
 			this.writeArray(model.physics.shapes, shape => {
