@@ -1,6 +1,6 @@
 import {BinformatDecoder} from "common/binformat/binformat_decoder"
 import {InputKey} from "user_input/inputs"
-import {AltasPartWithLayer, Atlas, AtlasPicture, Chord, DeviatingValueRange, InputBindDefinition, LayerDefinition, Model, ParticleDefinition, ResourcePack, StartEnd} from "resource_pack/resource_pack"
+import {AltasPartWithLayer, Atlas, AtlasPicture, Chord, DeviatingValueRange, InputBindDefinition, LayerDefinition, ModelDefinition, ParticleDefinition, ResourcePack, StartEnd} from "resource_pack/resource_pack"
 import {XY} from "types"
 
 export class ResourcePackDecoder extends BinformatDecoder<ResourcePack> {
@@ -85,7 +85,7 @@ export class ResourcePackDecoder extends BinformatDecoder<ResourcePack> {
 			return {size: [x, y], pictures}
 		})
 
-		const models = this.readArray((): Model => {
+		const models = this.readArray((): ModelDefinition => {
 			const x = this.readUint()
 			const y = this.readUint()
 			const modelSize = [x, y] as const
@@ -101,7 +101,7 @@ export class ResourcePackDecoder extends BinformatDecoder<ResourcePack> {
 
 			return {
 				size: modelSize,
-				texture,
+				graphics: texture,
 				physics: {isStatic, collisionGroup, shapes}
 			}
 		})
@@ -119,7 +119,7 @@ export class ResourcePackDecoder extends BinformatDecoder<ResourcePack> {
 			const lifetime = this.readDeviatingRange()
 			const angle = this.readDefaultFloat()
 			const texture = this.readAtlasPartWithLayer(atlasses)
-			return {amount, size, rotation, color, distance, lifetime, angle, texture}
+			return {amount, size, rotation, color, distance, lifetime, angle, graphics: texture}
 		})
 
 		const inputBinds = this.readArray((): InputBindDefinition => {
@@ -127,7 +127,7 @@ export class ResourcePackDecoder extends BinformatDecoder<ResourcePack> {
 			inputGroup = inputGroup === 0 ? null : inputGroup - 1
 			const isHold = this.readBool()
 			return {
-				group: inputGroup,
+				groupIndex: inputGroup,
 				isHold,
 				defaultChords: this.readArray((): Chord => {
 					const modMask = this.readUint()

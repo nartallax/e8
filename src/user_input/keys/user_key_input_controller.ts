@@ -94,7 +94,7 @@ export class UserKeyInputController {
 			binds.push({
 				bind: bindIndex,
 				chords: bind.defaultChords,
-				group: bind.group,
+				group: bind.groupIndex,
 				handlers
 			})
 		}

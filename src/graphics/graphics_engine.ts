@@ -94,11 +94,11 @@ export class GraphicEngine {
 		}
 
 		const def = this.rp.models[entity.index]!
-		if(!def.texture){
+		if(!def.graphics){
 			return
 		}
 
-		const layer = this.layers[def.texture.layer] as GraphicLayer<MainShader>
+		const layer = this.layers[def.graphics.layer] as GraphicLayer<MainShader>
 		const instance = layer.makeInstance()
 		entity.graphics = instance
 		// every single instanced attrib is expected to be filled here
@@ -106,7 +106,7 @@ export class GraphicEngine {
 		instance.setEntityPosition(entity.x, entity.y, entity.x, entity.y)
 		instance.setEntityRotation(entity.rotation, entity.rotation)
 		instance.setEntitySize(def.size[0], def.size[1])
-		const t = def.texture
+		const t = def.graphics
 		instance.setTexturePosition(t.position[0], t.position[1], t.size[0], t.size[1])
 		this.visibleEntities.add(entity)
 	}
@@ -117,7 +117,7 @@ export class GraphicEngine {
 		}
 
 		const def = this.rp.models[entity.index]!
-		if(!def.texture){
+		if(!def.graphics){
 			return
 		}
 
@@ -214,7 +214,7 @@ export class GraphicEngine {
 
 	emitParticles(particleDefIndex: number, position: XY, direction: number): void {
 		const def = this.rp.particles[particleDefIndex]!
-		const layer = this.layers[def.texture.layer] as GraphicLayer<ParticleShader>
+		const layer = this.layers[def.graphics.layer] as GraphicLayer<ParticleShader>
 		const currentTime = this.getCurrentTime()
 		for(let i = 0; i < def.amount; i++){
 			const thisParticleDirection = direction + (def.angle * (Math.random() - 0.5))
@@ -235,7 +235,7 @@ export class GraphicEngine {
 			)
 			instance.setParticleColor(def.color.start, def.color.end)
 			instance.setParticleTime(currentTime, lifetime)
-			instance.setTexturePosition(def.texture.position[0], def.texture.position[1], def.texture.size[0], def.texture.size[1])
+			instance.setTexturePosition(def.graphics.position[0], def.graphics.position[1], def.graphics.size[0], def.graphics.size[1])
 		}
 	}
 

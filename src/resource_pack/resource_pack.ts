@@ -5,7 +5,7 @@ import {InputKey} from "user_input/inputs"
 export interface ResourcePack {
 	readonly inworldUnitPixelSize: number
 	readonly atlasses: readonly Atlas[]
-	readonly models: readonly Model[]
+	readonly models: readonly ModelDefinition[]
 	readonly layers: readonly LayerDefinition[]
 	readonly collisionGroupCount: number
 	readonly collisionGroupPairs: readonly (readonly [number, number])[]
@@ -35,7 +35,7 @@ export interface ParticleDefinition {
 	readonly lifetime: DeviatingValueRange
 	// TODO: deviation type, linear/normal/etc
 	readonly angle: number // it's deviation too, but average is decided in runtime
-	readonly texture: AltasPartWithLayer
+	readonly graphics: AltasPartWithLayer
 }
 
 export type AltasPartWithLayer = AtlasPart & {readonly layer: number}
@@ -48,7 +48,7 @@ export interface LayerDefinition {
 
 /** One action that can be triggered by user input */
 export interface InputBindDefinition {
-	readonly group: number | null
+	readonly groupIndex: number | null
 	readonly isHold: boolean
 	readonly defaultChords: readonly Chord[]
 }
@@ -82,10 +82,10 @@ export interface AtlasPicture {
 }
 
 /** A model is a template for some object in the world */
-export interface Model {
+export interface ModelDefinition {
 	/** Width and height in ingame units. */
 	readonly size: XYTuple
-	readonly texture: AltasPartWithLayer | null
+	readonly graphics: AltasPartWithLayer | null
 	readonly physics: ModelPhysics
 }
 

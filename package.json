@@ -44,7 +44,9 @@
     "typescript-eslint": "^7.11.0"
   },
   "dependencies": {
-    "rbush": "^3.0.1"
+    "rbush": "^3.0.1",
+    "unzipit": "^1.4.3",
+    "xml-js": "^1.6.11"
   },
   "targets": {
     "release": {

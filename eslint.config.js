@@ -55,7 +55,8 @@ let result = tseslint.config(
 		curly: ["warn", "all"],
 		semi: "off",
 		"no-floating-decimal": ["warn"],
-		"no-lonely-if": ["warn"],
+		// it's irritating and doesn't really add anything
+		"no-lonely-if": ["off"],
 		"no-useless-rename": ["warn"],
 		// it's useful, I'm just furious when it's getting autocorrected mid-thought process, hence it's off
 		"no-useless-return": ["off"],

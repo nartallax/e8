@@ -94,7 +94,7 @@ export class ResourcePackEncoder extends BinformatEncoder<ResourcePack> {
 		this.writeArray(resourcePack.models, model => {
 			this.writeUint(model.size[0])
 			this.writeUint(model.size[1])
-			this.writeNullable(model.texture, texture => this.writeAtlasPartWithLayer(texture, resourcePack.atlasses))
+			this.writeNullable(model.graphics, texture => this.writeAtlasPartWithLayer(texture, resourcePack.atlasses))
 			this.writeBool(model.physics.isStatic)
 			this.writeUint(model.physics.collisionGroup)
 			this.writeArray(model.physics.shapes, shape => {
@@ -120,11 +120,11 @@ export class ResourcePackEncoder extends BinformatEncoder<ResourcePack> {
 			this.writeDefaultFloat(particle.distance.progressPower)
 			this.writeDeviatingRange(particle.lifetime)
 			this.writeDefaultFloat(particle.angle)
-			this.writeAtlasPartWithLayer(particle.texture, resourcePack.atlasses)
+			this.writeAtlasPartWithLayer(particle.graphics, resourcePack.atlasses)
 		})
 
 		this.writeArray(resourcePack.inputBinds, bind => {
-			this.writeUint(bind.group === null ? 0 : bind.group + 1)
+			this.writeUint(bind.groupIndex === null ? 0 : bind.groupIndex + 1)
 			this.writeBool(bind.isHold)
 			this.writeArray(bind.defaultChords, chord => {
 				const mainKeys: InputKey[] = []
