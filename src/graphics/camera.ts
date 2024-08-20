@@ -1,11 +1,11 @@
 import {EngineImpl} from "glue/engine"
-import {EntityImpl} from "glue/entity"
 import {EventImpl} from "glue/event"
+import {Entity} from "entities/entity"
 import {XY, Camera, CursorMoveInputEvent} from "types"
 
-export class CameraImpl implements Camera<number, EntityImpl> {
+export class CameraImpl implements Camera {
 
-	followTarget: EntityImpl | null = null
+	followTarget: Entity | null = null
 	private _x: AnimatableValue
 	private _y: AnimatableValue
 	private _zoom: AnimatableValue
@@ -149,7 +149,7 @@ export class CameraImpl implements Camera<number, EntityImpl> {
 		this.currentRevision++
 	}
 
-	setFollowTarget(target: EntityImpl | null): void {
+	setFollowTarget(target: Entity | null): void {
 		this.followTarget = target
 	}
 

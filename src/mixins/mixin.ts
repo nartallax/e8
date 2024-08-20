@@ -1,7 +1,9 @@
+import {markValue} from "common/marker/marker"
+
 type Cls<T> = {new(): T}
 type MixinMaker<T, P> = (parentClass: Cls<P>) => Cls<T & P>
-type MixinArray<T extends object[]> = [...{[I in keyof T]: Mixin<T[I]>}]
-type MixinArrayMixingResult<T extends object[]> = T extends [infer First, ...infer Rest extends object[]] ? First & MixinArrayMixingResult<Rest> : unknown
+export type MixinArray<T extends object[]> = [...{[I in keyof T]: Mixin<T[I]>}]
+export type MixinArrayMixingResult<T extends object[]> = T extends [infer First, ...infer Rest extends object[]] ? First & MixinArrayMixingResult<Rest> : unknown
 
 
 let index = 0
@@ -19,6 +21,7 @@ export class Mixin<T extends object> {
 	constructor(readonly parents: Mixin<object>[], readonly maker: MixinMaker<T, unknown>) {
 		this.ancestorsCount = [...new Set(this.gatherAncestors())].length
 		this.testForImproperDeclaration()
+		markValue(this)
 	}
 
 	private testForImproperDeclaration() {

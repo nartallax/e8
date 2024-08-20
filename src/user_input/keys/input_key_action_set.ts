@@ -9,13 +9,13 @@ export interface InputKeyEvent {
 }
 
 export interface InputKeyActionCallData {
-	readonly handler: InputBindActionFn<number>
+	readonly handler: InputBindActionFn
 	/** How much times user pressed the chord.
 	 * For hold actions this number doesn't mean anything. */
 	count: number
 	/** What binds were combined to produce this action call.
 	 * For non-grouped actions doesn't mean anything. For grouped actions contains other binds from the group which were invoked by user */
-	readonly binds: Set<number>
+	readonly binds: Set<string>
 }
 
 export interface InputKeyActionSearchResult {
@@ -29,10 +29,10 @@ interface Action {
 	/** Excludes main key for the action, for sake of performance */
 	readonly chord: BitSet
 	readonly chordSize: number
-	readonly handler: InputBindActionFn<number>
+	readonly handler: InputBindActionFn
 	/** If group is absent from source definition - it will be some fake group */
 	readonly group: number
-	readonly bind: number
+	readonly name: string
 }
 
 /** For each key of bind chord, action is added to array for that key
@@ -50,11 +50,10 @@ interface Action {
  * Hope it will be enough. */
 type ActionMap = ReadonlyMap<InputKey, readonly Action[]>
 
-
 export interface InputKeyActionSourceBind {
-	readonly handlers: InputBindActionsObj<number>
+	readonly name: string
+	readonly handlers: InputBindActionsObj
 	readonly chords: readonly Chord[]
-	readonly bind: number
 	readonly group: number | null
 }
 
@@ -74,10 +73,10 @@ export class InputKeyActionSet {
 
 	constructor(binds: readonly InputKeyActionSourceBind[]) {
 		let group = binds.map(x => x.group).reduce((a, b) => Math.max(a ?? -1, b ?? -1), -1) ?? -1
-		const bindToGroupMap = new Map<number, number>()
+		const bindToGroupMap = new Map<string, number>()
 		for(const bind of binds){
-			if(!bindToGroupMap.has(bind.bind)){
-				bindToGroupMap.set(bind.bind, bind.group ?? ++group)
+			if(!bindToGroupMap.has(bind.name)){
+				bindToGroupMap.set(bind.name, bind.group ?? ++group)
 			}
 		}
 		this.totalGroupsCount = group + 1
@@ -94,7 +93,7 @@ export class InputKeyActionSet {
 		this.holdActions = this.buildActionMap(binds, bindToGroupMap, "onHold")
 	}
 
-	private buildActionMap(binds: readonly InputKeyActionSourceBind[], bindGroupMap: ReadonlyMap<number, number>, type: keyof InputBindActionsObj<number>): ActionMap {
+	private buildActionMap(binds: readonly InputKeyActionSourceBind[], bindGroupMap: ReadonlyMap<string, number>, type: keyof InputBindActionsObj): ActionMap {
 		const resultMap = new Map<InputKey, Action[]>()
 		for(const bind of binds){
 			const handler = bind.handlers[type]
@@ -102,7 +101,7 @@ export class InputKeyActionSet {
 				continue
 			}
 
-			const group = bindGroupMap.get(bind.bind)!
+			const group = bindGroupMap.get(bind.name)!
 
 			for(const chord of bind.chords){
 				for(const primaryKey of chord){
@@ -112,7 +111,7 @@ export class InputKeyActionSet {
 						resultMap.set(primaryKey, arr)
 					}
 					arr.push({
-						bind: bind.bind,
+						name: bind.name,
 						group,
 						chordSize: chord.length,
 						chord: BitSet.ofValues(chord.filter(key => key !== primaryKey), this.keyIndexMap),
@@ -191,12 +190,12 @@ export class InputKeyActionSet {
 			if(callData === null){
 				calls[action.group] = {
 					handler: action.handler,
-					binds: new Set([action.bind]),
+					binds: new Set([action.name]),
 					count: 1
 				}
 			} else {
 				callData.count++
-				callData.binds.add(action.bind)
+				callData.binds.add(action.name)
 			}
 		}
 	}

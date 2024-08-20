@@ -1,5 +1,6 @@
+import {Content, ParticleDefinition} from "content/content"
+import {Entity} from "entities/entity"
 import {EngineImpl} from "glue/engine"
-import {EntityImpl} from "glue/entity"
 import {CameraImpl} from "graphics/camera"
 import {createWebgl2Canvas, setViewportSizeByCanvas} from "graphics/canvas"
 import {AttribDataPack, AttribInstance, ShaderAttribs} from "graphics/graphic_types"
@@ -9,7 +10,6 @@ import {MainShader, makeMainShader} from "graphics/webgl/shaders/main_shader/mai
 import {ParticleShader, makeParticleShader} from "graphics/webgl/shaders/particle_shader/particle_shader"
 import {makeSquareIndexBuffer, makeSquareVertexBuffer} from "graphics/webgl/square_buffer_creation"
 import {loadSvgAsTexture} from "graphics/webgl/texture"
-import {ResourcePack} from "resource_pack/resource_pack"
 import {XY} from "types"
 
 export type EntityGraphicsFieldType = AttribInstance<ShaderAttribs<MainShader>> | null
@@ -27,7 +27,7 @@ export class GraphicEngine {
 	private readonly particlePool: Pool<AttribDataPack<ShaderAttribs<ParticleShader>>>
 	private readonly mainLayers: readonly GraphicLayer<MainShader>[]
 	private readonly layers: readonly GraphicLayer<SomeShader>[]
-	private readonly visibleEntities = new Set<EntityImpl>()
+	private readonly visibleEntities = new Set<Entity>()
 	readonly canvas: HTMLCanvasElement
 	private screenHeight: number = 0
 	private screenWidth: number = 0
@@ -36,7 +36,7 @@ export class GraphicEngine {
 	private activeShader: SomeShader | null = null
 	readonly camera: CameraImpl
 
-	constructor(private readonly rp: ResourcePack, container: HTMLElement, private readonly engine: EngineImpl) {
+	constructor(private readonly content: Content, container: HTMLElement, private readonly engine: EngineImpl) {
 		this.camera = new CameraImpl(engine)
 		const [canvas, gl] = createWebgl2Canvas()
 		this.canvas = canvas
@@ -62,7 +62,7 @@ export class GraphicEngine {
 
 		const mainLayers: (typeof this.mainLayers[number])[] = this.mainLayers = []
 		const layers: (typeof this.layers[number])[] = this.layers = []
-		for(const def of rp.layers){
+		for(const [,def] of content.orderedLayers){
 			let layer: GraphicLayer<SomeShader>
 			switch(def.type){
 				case "model": {
@@ -81,43 +81,40 @@ export class GraphicEngine {
 	}
 
 	async init(): Promise<void> {
-		const svg = this.rp.atlasses[0]!.pictures[0]!.data
-		if(typeof(svg) !== "string"){
-			throw new Error("Unexpected atlas picture format")
-		}
+		const svg = this.content.atlasses[0]!.image
 		this.atlasTexture = await loadSvgAsTexture(this.gl, svg)
 	}
 
-	addEntity(entity: EntityImpl): void {
+	addEntity(entity: Entity): void {
 		if(entity.graphics !== null){
 			throw new Error("Assertion failed: double-add graphics")
 		}
 
-		const def = this.rp.models[entity.index]!
-		if(!def.graphics){
+		const def = entity.model
+		if(!def || !def.graphics){
 			return
 		}
 
-		const layer = this.layers[def.graphics.layer] as GraphicLayer<MainShader>
+		const layer = this.layers[def.graphics.layerIndex] as GraphicLayer<MainShader>
 		const instance = layer.makeInstance()
 		entity.graphics = instance
 		// every single instanced attrib is expected to be filled here
 		// otherwise there will be zeroes
 		instance.setEntityPosition(entity.x, entity.y, entity.x, entity.y)
 		instance.setEntityRotation(entity.rotation, entity.rotation)
-		instance.setEntitySize(def.size[0], def.size[1])
+		instance.setEntitySize(def.size.x, def.size.y)
 		const t = def.graphics
-		instance.setTexturePosition(t.position[0], t.position[1], t.size[0], t.size[1])
+		instance.setTexturePosition(t.atlasPosition.x, t.atlasPosition.y, t.size.x, t.size.y)
 		this.visibleEntities.add(entity)
 	}
 
-	removeEntity(entity: EntityImpl): void {
+	removeEntity(entity: Entity): void {
 		if(entity.graphics === null){
 			throw new Error("Assertion failed: double-delete graphics")
 		}
 
-		const def = this.rp.models[entity.index]!
-		if(!def.graphics){
+		const def = entity.model
+		if(!def || !def.graphics){
 			return
 		}
 
@@ -212,9 +209,8 @@ export class GraphicEngine {
 		updateScreenSize()
 	}
 
-	emitParticles(particleDefIndex: number, position: XY, direction: number): void {
-		const def = this.rp.particles[particleDefIndex]!
-		const layer = this.layers[def.graphics.layer] as GraphicLayer<ParticleShader>
+	emitParticles(def: ParticleDefinition, position: XY, direction: number): void {
+		const layer = this.layers[def.graphics.layerIndex] as GraphicLayer<ParticleShader>
 		const currentTime = this.getCurrentTime()
 		for(let i = 0; i < def.amount; i++){
 			const thisParticleDirection = direction + (def.angle * (Math.random() - 0.5))
@@ -235,7 +231,7 @@ export class GraphicEngine {
 			)
 			instance.setParticleColor(def.color.start, def.color.end)
 			instance.setParticleTime(currentTime, lifetime)
-			instance.setTexturePosition(def.graphics.position[0], def.graphics.position[1], def.graphics.size[0], def.graphics.size[1])
+			instance.setTexturePosition(def.graphics.atlasPosition.x, def.graphics.atlasPosition.y, def.graphics.size.x, def.graphics.size.y)
 		}
 	}
 

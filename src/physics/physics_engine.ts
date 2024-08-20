@@ -1,6 +1,5 @@
-import {EntityImpl} from "glue/entity"
+import {Entity} from "entities/entity"
 import * as Matter from "libs/matterjs/matter"
-import {ResourcePack} from "resource_pack/resource_pack"
 import {XY} from "types"
 
 // just need some identifier to add as plugin key
@@ -22,81 +21,49 @@ export class PhysicsEngine {
 	// also, if we ever will have a lot of non-moving objects -
 	// we'll need to add optimization layer over matterjs
 	// it can be done with rtree, see shuttle project
-	private readonly movingEntities = new Set<EntityImpl>()
+	private readonly movingEntities = new Set<Entity>()
 	private readonly addToMovingEntitiesEventHandler = (e: Matter.IEvent<Matter.Body>) =>
 		this.movingEntities.add(getBodyEntity(e.source))
 	private readonly removeFromMovingEntitiesEventHandler = (e: Matter.IEvent<Matter.Body>) =>
 		this.movingEntities.delete(getBodyEntity(e.source))
 	tickCount = 0
-	private readonly collisionGroupMasks: readonly number[]
-	private readonly modelShapes: readonly (Matter.Vector[][] | null)[]
-	private readonly shapeLowerBounds: readonly XY[]
 
-	constructor(private readonly rp: ResourcePack, opts: Matter.IEngineDefinition) {
+	constructor(opts: Matter.IEngineDefinition) {
 		this.mjs = Matter.Engine.create({
 			...opts,
 			enableSleeping: true // we are using sleeping; everything will break if it is disabled
 		})
 		Matter.Events.on(this.mjs, "collisionActive", this.processCollisionEvent.bind(this))
-
-		const masks = this.collisionGroupMasks = new Array<number>().fill(0)
-		for(const [a, b] of rp.collisionGroupPairs){
-			masks[a] |= 1 << b
-			masks[b] |= 1 << a
-		}
-
-		const modelVertices = this.modelShapes = new Array<Matter.Vector[][] | null>(rp.models.length)
-		const shapeLowerBounds = this.shapeLowerBounds = new Array<XY>(rp.models.length)
-		let i = -1
-		for(const model of rp.models){
-			++i
-			const shapes = model.physics.shapes
-			if(shapes.length === 0){
-				modelVertices[i] = null
-				shapeLowerBounds[i] = {x: 0, y: 0}
-				continue
-			}
-
-			const vectors = shapes.map(shape =>
-				shape.map(([x, y]) =>
-					({x: x * engineCoordsMult, y: y * engineCoordsMult})
-				)
-			)
-			modelVertices[i] = vectors
-
-			const minX = shapes.flat().reduce((acc, xy) => Math.min(acc, xy[0]), Number.MAX_SAFE_INTEGER)
-			const minY = shapes.flat().reduce((acc, xy) => Math.min(acc, xy[1]), Number.MAX_SAFE_INTEGER)
-			shapeLowerBounds[i] = {x: minX * engineCoordsMult, y: minY * engineCoordsMult}
-		}
 	}
 
 	private processCollisionEvent(e: Matter.IEventCollision<Matter.Engine>): void {
 		for(const pair of e.pairs){
-			const a: EntityImpl = getBodyEntity(pair.bodyA)
-			const b: EntityImpl = getBodyEntity(pair.bodyB)
+			const a: Entity = getBodyEntity(pair.bodyA)
+			const b: Entity = getBodyEntity(pair.bodyB)
 			a.handleCollision(b)
 			b.handleCollision(a)
 		}
 	}
 
-	addEntity(entity: EntityImpl): void {
+	addEntity(entity: Entity): void {
 		if(entity.phys){
 			throw new Error("Assertion failed, entity has body")
 		}
 
-		const shapes = this.modelShapes[entity.index]!
-		if(shapes === null){
+		const bodyDef = entity.model?.physics
+		const shapes = bodyDef?.shapes
+		if(!shapes || !bodyDef){
 			entity.phys = null
 			return
 		}
-		const bodyDef = this.rp.models[entity.index]!.physics
 
 		const body = Matter.Bodies.fromVertices(entity.x * engineCoordsMult, entity.y * engineCoordsMult, shapes, {
 			isStatic: bodyDef.isStatic,
 			collisionFilter: {
-				group: 0,
+				group: 0, // 0 = use category and mask
+				// bodies will collide if !!((a.category & b.mask) && (b.category & a.mask))
 				category: 1 << bodyDef.collisionGroup,
-				mask: this.collisionGroupMasks[bodyDef.collisionGroup]
+				mask: bodyDef.collisionGroupMask
 			},
 			angle: entity.rotation,
 			isSleeping: true
@@ -110,7 +77,7 @@ export class PhysicsEngine {
 			// (and then we are moving the body back where it belongs)
 			// I probably could go in different direction about that and just shift visuals...?
 			// if there will be some weird physics bugs - I should try that
-			const lowerBounds = this.shapeLowerBounds[entity.index]!
+			const lowerBounds = bodyDef.shapesLowerBounds
 			const diffX = body.bounds.min.x - lowerBounds.x
 			const diffY = body.bounds.min.y - lowerBounds.y
 			Matter.Body.setCentre(body, Matter.Vector.create(diffX, diffY))
@@ -124,14 +91,13 @@ export class PhysicsEngine {
 		Matter.Events.on(body, "sleepEnd", this.addToMovingEntitiesEventHandler)
 	}
 
-	removeEntity(entity: EntityImpl): void {
+	removeEntity(entity: Entity): void {
 		const body = entity.phys
 		if(!body){
 			// no assertion here. entity can have no body if there's no shape
 			return
 		}
 		entity.phys = null
-
 
 		this.movingEntities.delete(entity)
 		Matter.Composite.remove(this.mjs.world, body)
@@ -152,7 +118,7 @@ export class PhysicsEngine {
 		this.tickCount++
 	}
 
-	moveEntity(entity: EntityImpl, coords: XY, rotation: number): void {
+	moveEntity(entity: Entity, coords: XY, rotation: number): void {
 		entity.x = coords.x
 		entity.y = coords.y
 		entity.rotation = rotation
@@ -165,7 +131,7 @@ export class PhysicsEngine {
 		entity.currentGraphicVersion++
 	}
 
-	applyForceToEntity(entity: EntityImpl, xForce: number, yForce: number, entityOffsetX: number, entityOffsetY: number): void {
+	applyForceToEntity(entity: Entity, xForce: number, yForce: number, entityOffsetX: number, entityOffsetY: number): void {
 		const body = entity.phys
 		if(!body){
 			return
@@ -190,9 +156,9 @@ export class PhysicsEngine {
 	}
 }
 
-function getBodyEntity(body: Matter.Body): EntityImpl {
+function getBodyEntity(body: Matter.Body): Entity {
 	while(true){
-		const entity: EntityImpl = body.plugin[mjsPluginName]
+		const entity: Entity = body.plugin[mjsPluginName]
 		if(entity){
 			return entity
 		}

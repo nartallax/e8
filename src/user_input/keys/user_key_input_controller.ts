@@ -1,5 +1,5 @@
-import {InputBindDefinition} from "resource_pack/resource_pack"
-import {InputBindActions, InputBindActionsObj} from "types"
+import {InputBindDefinition} from "content/content"
+import {InputBindActions} from "types"
 import {InputKey, browserKeyboardCodeToInputKey, knownMouseButtonInputs} from "user_input/inputs"
 import {InputKeyActionSet, InputKeyActionSourceBind, InputKeyEvent} from "user_input/keys/input_key_action_set"
 
@@ -7,9 +7,8 @@ export class UserKeyInputController {
 	private downKeys: ReadonlySet<InputKey> = new Set()
 	private actionSet = new InputKeyActionSet([])
 	private readonly eventQueue: InputKeyEvent[] = []
-	private bindActionHandlers: InputBindActionsObj<number>[] = []
 
-	constructor(private readonly bindDefs: readonly InputBindDefinition[]) {}
+	constructor(private readonly bindDefs: Map<string, InputBindDefinition>) {}
 
 	private onKeyDown = (e: KeyboardEvent) => {
 		const key = browserKeyboardCodeToInputKey(e.code)
@@ -74,31 +73,12 @@ export class UserKeyInputController {
 		this.clear()
 	}
 
-	setBindHandlers(actionHandlers: {[x: number]: InputBindActions<number> | (() => void)}): void {
-		this.bindActionHandlers = actionsObjectToArray(this.bindDefs, actionHandlers)
-		this.rebuildActionSet()
+	setBindHandlers(actionHandlers: Record<string, InputBindActions>): void {
+		const bindsWithKeys = actionsObjectToArray(this.bindDefs, actionHandlers)
+		this.actionSet = new InputKeyActionSet(bindsWithKeys)
 		this.subscribe()
 		// TODO: shutdown procedure for this controller
 		void this.unsubscribe
-	}
-
-	private rebuildActionSet(): void {
-		const binds: InputKeyActionSourceBind[] = []
-		for(let bindIndex = 0; bindIndex < this.bindDefs.length; bindIndex++){
-			const handlers = this.bindActionHandlers[bindIndex]
-			if(!handlers){
-				continue
-			}
-
-			const bind = this.bindDefs[bindIndex]!
-			binds.push({
-				bind: bindIndex,
-				chords: bind.defaultChords,
-				group: bind.groupIndex,
-				handlers
-			})
-		}
-		this.actionSet = new InputKeyActionSet(binds)
 	}
 
 	clear(): void {
@@ -107,19 +87,21 @@ export class UserKeyInputController {
 	}
 }
 
-function actionsObjectToArray(binds: readonly InputBindDefinition[], obj: {readonly [key: number]: InputBindActions<number>}): InputBindActionsObj<number>[] {
-	let i = -1
-	const result: InputBindActionsObj<number>[] = []
-	while(true){
-		let value = obj[++i]
-		if(!value){
-			break
-		}
+function actionsObjectToArray(binds: Map<string, InputBindDefinition>, obj: Record<string, InputBindActions>): InputKeyActionSourceBind[] {
+	const result: InputKeyActionSourceBind[] = []
+	for(const [name, value] of Object.entries(obj)){
+		let obj: InputKeyActionSourceBind
+		const def = binds.get(name)!
 		if(typeof(value) === "function"){
-			const bindDef = binds[i]!
-			value = bindDef.isHold ? {onHold: value} : {onDown: value}
+			obj = def.isHold ? {
+				group: def.groupIndex, chords: def.defaultChords, name, handlers: {onHold: value}
+			} : {
+				group: def.groupIndex, chords: def.defaultChords, name, handlers: {onDown: value}
+			}
+		} else {
+			obj = {group: def.groupIndex, chords: def.defaultChords, name, handlers: value}
 		}
-		result.push(value)
+		result.push(obj)
 	}
 	return result
 }

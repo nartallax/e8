@@ -1,5 +1,6 @@
 import {InputBindDefinition, LayerDefinition, ModelDefinition, ModelPhysics, ParticleDefinition} from "content/content"
 import {supportedTextureExtensions} from "content/content_pack_reader"
+import {XY} from "types"
 
 export type ContentPack = {
 	description: ContentPackDescription
@@ -51,8 +52,9 @@ export type ContentPackGraphics = {
 	layerPath: string
 }
 
-export type ContentPackModelPhysics = Omit<ModelPhysics, "collisionGroup"> & {
+export type ContentPackModelPhysics = Omit<ModelPhysics, "collisionGroup" | "collisionGroupMask" | "shapes" | "shapesLowerBounds"> & {
 	collisionGroupPath: string
+	shapes: XY[][]
 }
 
 /** A model is a template for some object in the world */

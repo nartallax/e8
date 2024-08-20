@@ -7,9 +7,10 @@ export type Content = {
 	atlasses: Atlas[]
 	models: Map<string, ModelDefinition>
 	layers: Map<string, LayerDefinition>
+	// layers in order they should be drawn
+	orderedLayers: [string, LayerDefinition][]
 	inputBinds: Map<string, InputBindDefinition>
 	particles: Map<string, ParticleDefinition>
-	collisionGroupMasks: number[] // index of collision group -> bitmask for this collision group
 	// TODO: we should also have here entity definitions somehow. not sure how this will look like exactly
 }
 
@@ -78,10 +79,14 @@ export type AtlasPartWithLayer = AtlasPart & {
 
 export type ModelPhysics = {
 	isStatic: boolean
+	// TODO: make nullable
+	// null means "don't collide with anything", but will still participate in queries like "what's in this point of space"
 	collisionGroup: number // integer, 0-31
+	collisionGroupMask: number
 	/** Shapes are convex polygons.
 	 * More than one can be specified if source polygon was concave, or if there's detached polygon */
-	shapes: XY[][]
+	shapes: Matter.Vector[][] | null
+	shapesLowerBounds: XY
 }
 
 /** A model is a template for some object in the world */

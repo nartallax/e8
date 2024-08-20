@@ -1,11 +1,12 @@
 // that's for Parcel. apparently he's not smart enough to detect them automatically. (why?)
 /// <reference types="./common/modules" />
 
-import {ResourcePack} from "resource_pack/resource_pack"
 import * as Matter from "libs/matterjs/matter"
+import {Entity} from "entities/entity"
+import {Content, ParticleDefinition} from "content/content"
 
 export interface EngineOptions {
-	readonly resourcePack: ResourcePack
+	readonly content: Content
 	/** Canvas will be created inside this element */
 	readonly container: HTMLElement
 	/** Amount of ticks per second this engine will aim for.
@@ -24,11 +25,11 @@ export interface EngineOptions {
 	readonly debugStatsDumpRate?: number
 }
 
-export interface Engine<EntityIndex = number, Binds extends number = number, ParticleIndex = number> {
-	readonly camera: Camera<EntityIndex, Entity<EntityIndex>>
+export interface Engine {
+	readonly camera: Camera
 	/** Amount of time passed while engine was running, in seconds. */
 	readonly timePassed: number
-	setBindHandlers(actionHandlers: {[bindIndex in Binds]: InputBindActions<Binds>}): void
+	setBindHandlers(actionHandlers: Record<string, InputBindActions>): void
 	setTickCursorHandler(handler: ((event: CursorMoveInputEvent) => void) | null): void
 	getLastKnownCursorEvent(): CursorMoveInputEvent
 	/** Event "ingame tick is about to be processed" */
@@ -39,20 +40,7 @@ export interface Engine<EntityIndex = number, Binds extends number = number, Par
 	/** Stop the engine.
 	 * You can resume engine later from the point you stopped it on */
 	stop(): void
-	emitParticles(particleDefIndex: ParticleIndex, position: XY, direction: number): void
-}
-export type IndexTypeOfEngine<E> = E extends Engine<infer I> ? I : never
-
-/** A class that can create engines.
- * Contains various functions that help with setup of the engine */
-export interface EngineLoader<E extends Engine> {
-	/** Create a new instance of the engine. */
-	createEngine(options: EngineOptions): Promise<E>
-	/** Load resource pack from URL or byte array */
-	getResourcePack(urlOrData: string | Uint8Array): Promise<ResourcePack>
-	/** Register some class as entity class
-	 * If you don't need to add any logic to entity - you may omit class, empty class will be created for you */
-	registerEntity<I extends IndexTypeOfEngine<E>, T extends Entity<I>>(entity: I, cls?: EntityClassBase<I, T>): EntityClass<I, T>
+	emitParticles(particleDef: ParticleDefinition, position: XY, direction: number): void
 }
 
 export interface CursorMoveInputEvent {
@@ -65,47 +53,12 @@ export interface XY {
 	readonly y: number
 }
 
-export type InputBindActions<Binds extends number> = InputBindActionsObj<Binds> | InputBindActionFn<Binds>
-export type InputBindActionFn<Binds extends number> = ((deltaTime: number, meta: {binds: Set<Binds>, count: number}) => void)
-export interface InputBindActionsObj<Binds extends number> {
-	onDown?: InputBindActionFn<Binds>
-	onHold?: InputBindActionFn<Binds>
-	onUp?: InputBindActionFn<Binds>
-}
-
-/** Some object in world. */
-export interface Entity<Index = number> {
-	readonly x: number
-	readonly y: number
-	readonly rotation: number
-	readonly index: Index
-
-	/** Add the entity into the world. */
-	add(): void
-	/** Remove the entity from the world. */
-	remove(): void
-	/** Move the entity to specified inworld coords, and rotate accordingly.
-	 * Keep in mind that most of the time you should rely on physics engine to determine positions of entites, otherwise it may bug in funny ways */
-	move(coords: XY, rotation: number): void
-	// TODO: rewrite it for angle maybe?
-	applyForce(xForce: number, yForce: number, xOffset?: number, yOffset?: number): void
-	/** Called when this entity collides with another entity.
-	 * This event will be called two times for each collision on different entities */
-	handleCollision(otherEntity: Entity<unknown>): void
-}
-
-export interface EntityClassBase<I = number, E extends Entity<I> = Entity<I>> {
-	/** Create the entity (and do nothing else) */
-	new(): E
-}
-
-export interface EntityClass<I = number, E extends Entity<I> = Entity<I>> extends EntityClassBase<I, E> {
-	/** Create the entity in world at the specified location.
-	 *
-	 * Equivalent of .create() + .move() + .add() */
-	spawn(coords: XY, rotation: number): E
-	readonly engine: Engine<I>
-	readonly index: number
+export type InputBindActions = InputBindActionsObj | InputBindActionFn
+export type InputBindActionFn = ((deltaTime: number, meta: {binds: Set<string>, count: number}) => void)
+export interface InputBindActionsObj {
+	onDown?: InputBindActionFn
+	onHold?: InputBindActionFn
+	onUp?: InputBindActionFn
 }
 
 export interface Event<A extends unknown[]>{
@@ -114,14 +67,14 @@ export interface Event<A extends unknown[]>{
 	fire(...args: A): void
 }
 
-export interface Camera<EntityIndex, E extends Entity<EntityIndex>> {
+export interface Camera {
 	readonly x: number
 	readonly y: number
 	/** Number of pixels single ingame unit occupies on screen */
 	readonly zoom: number
 	/** How much zoom changes. Logarithmic value, base 2. */
 	readonly zoomStepSize: number
-	readonly followTarget: E | null
+	readonly followTarget: Entity | null
 	readonly cursorPanMultiplier: number
 	/** in seconds */
 	readonly zoomAnimationDuration: number
@@ -139,7 +92,7 @@ export interface Camera<EntityIndex, E extends Entity<EntityIndex>> {
 	setZoomAnimationDuration(durationSeconds: number): void
 	setPanAnimationDuration(durationSeconds: number): void
 	setCursorPanAnimationDuration(durationSeconds: number): void
-	setFollowTarget(target: E | null): void
+	setFollowTarget(target: Entity | null): void
 	screenCoordsToInworldCoords(xy: XY): XY
 	/** How much ingame units should camera be shifted by when cursor is shifted by one unit from the center of screen
 	 * Default is zero */

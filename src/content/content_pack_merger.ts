@@ -1,5 +1,5 @@
 import {AtlasPart, Content, InputBindDefinition, ModelDefinition, ParticleDefinition} from "content/content"
-import {ContentPack} from "content/content_pack"
+import {ContentPack, ContentPackModelPhysics} from "content/content_pack"
 import {omit} from "common/omit"
 import {contentPacksToAtlasses} from "content/atlas"
 
@@ -7,14 +7,19 @@ import {contentPacksToAtlasses} from "content/atlas"
 export const mergeContentPacks = (packs: ContentPack[]): Content => {
 	const [atlasses, textureToAtlasPartMap] = contentPacksToAtlasses(packs)
 	const getCollisionGroupIndex = makeIndexResolver("collision group", packs.map(pack => pack.collisionGroups))
+	const scale = getScale(packs)
+
+	const allLayersMap = mergeMaps(packs.map(pack => pack.layers))
+	const namedOrderedLayers = [...allLayersMap.entries()].sort(([,a], [,b]) => a.drawPriority - b.drawPriority)
+
 
 	return {
-		inworldUnitPixelSize: getScale(packs),
-		collisionGroupMasks: getCollisionGroupMasks(packs, getCollisionGroupIndex),
-		layers: mergeMaps(packs.map(pack => pack.layers)),
+		inworldUnitPixelSize: scale,
+		layers: allLayersMap,
+		orderedLayers: namedOrderedLayers,
 		inputBinds: getInputBinds(packs),
 		particles: getParticles(packs, textureToAtlasPartMap),
-		models: getModels(packs, textureToAtlasPartMap, getCollisionGroupIndex),
+		models: getModels(packs, textureToAtlasPartMap, getCollisionGroupIndex, scale),
 		atlasses
 	}
 }
@@ -34,12 +39,19 @@ const makeResolver = <T>(name: string, maps: Map<string, T>[]): (key: string) =>
 	}
 }
 
-const makeIndexResolver = <T>(name: string, maps: Map<string, T>[]): (key: string) => number => {
+const makeOrderedIndexResolver = (name: string, names: string[], maxIndex: number = Number.MAX_SAFE_INTEGER): (key: string) => number => {
+	if(names.length > maxIndex){
+		throw new Error(`Cannot have more than ${maxIndex} of ${name}, but have ${names.length}.`)
+	}
+	const indexMap = new Map(names.map((name, index) => [name, index]))
+	return makeResolver(name, [indexMap])
+}
+
+const makeIndexResolver = <T>(name: string, maps: Map<string, T>[], maxIndex: number = Number.MAX_SAFE_INTEGER): (key: string) => number => {
 	// this could be more optimal, but whatever
 	const allValuesMap = mergeMaps(maps)
 	const allValues = [...allValuesMap.keys()]
-	const indexMap = new Map(allValues.map((groupPath, index) => [groupPath, index]))
-	return makeResolver(name, [indexMap])
+	return makeOrderedIndexResolver(name, allValues, maxIndex)
 }
 
 const getInputBinds = (packs: ContentPack[]): Map<string, InputBindDefinition> => {
@@ -71,7 +83,8 @@ const getParticles = (packs: ContentPack[], textures: Map<string, AtlasPart>): M
 		]))
 }
 
-const getModels = (packs: ContentPack[], textures: Map<string, AtlasPart>, getCollisionGroupIndex: (path: string) => number): Map<string, ModelDefinition> => {
+const getModels = (packs: ContentPack[], textures: Map<string, AtlasPart>, getCollisionGroupIndex: (path: string) => number, scale: number): Map<string, ModelDefinition> => {
+	const collisionMasks = getCollisionGroupMasks(packs, getCollisionGroupIndex)
 	const getLayerIndex = makeIndexResolver("layer", packs.map(pack => pack.layers))
 	const getAtlasPart = makeResolver("texture", [textures])
 	return new Map(packs.map(pack => [...pack.models.entries()])
@@ -85,11 +98,36 @@ const getModels = (packs: ContentPack[], textures: Map<string, AtlasPart>, getCo
 					...getAtlasPart(rawModel.graphics.texturePath)
 				},
 				physics: !rawModel.physics ? null : {
-					...omit(rawModel.physics, "collisionGroupPath"),
-					collisionGroup: getCollisionGroupIndex(rawModel.physics.collisionGroupPath)
+					...omit(rawModel.physics, "collisionGroupPath", "shapes"),
+					collisionGroup: getCollisionGroupIndex(rawModel.physics.collisionGroupPath),
+					collisionGroupMask: collisionMasks[getCollisionGroupIndex(rawModel.physics.collisionGroupPath)]!,
+					...getShapesWithBounds(rawModel.physics, scale)
 				}
 			}
 		]))
+}
+
+const getShapesWithBounds = (phys: ContentPackModelPhysics, scale: number) => {
+	const shapes = phys.shapes
+	if(shapes.length === 0){
+		return {
+			shapes: null,
+			shapesLowerBounds: {x: 0, y: 0}
+		}
+	}
+
+	const vectors = shapes.map(shape =>
+		shape.map(({x, y}) =>
+			({x: x * scale, y: y * scale})
+		)
+	)
+
+	const minX = shapes.flat().reduce((acc, xy) => Math.min(acc, xy.x), Number.MAX_SAFE_INTEGER)
+	const minY = shapes.flat().reduce((acc, xy) => Math.min(acc, xy.y), Number.MAX_SAFE_INTEGER)
+	return {
+		shapes: vectors,
+		shapesLowerBounds: {x: minX * scale, y: minY * scale}
+	}
 }
 
 const getCollisionGroupMasks = (packs: ContentPack[], getCollisionGroupIndex: (path: string) => number): number[] => {

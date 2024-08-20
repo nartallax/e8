@@ -1,3 +1,4 @@
+import {ParticleDefinition} from "content/content"
 import {EventImpl} from "glue/event"
 import {Perf} from "glue/perfometer"
 import {CameraImpl} from "graphics/camera"
@@ -8,7 +9,12 @@ import {UserInputController} from "user_input/user_input_controller"
 
 const defaultFrameSkipTime = 0.25
 
-export class EngineImpl implements Engine<number, number, number> {
+// TODO: think of ways to do this better
+// it's not wrong to have multiple engine instances in runtime for whatever reason
+// but each content pack set should see their own engine
+export let engine: EngineImpl = null as any
+
+export class EngineImpl implements Engine {
 
 	private readonly frameSkipCutoff: number
 	readonly timePerTick: number
@@ -24,12 +30,17 @@ export class EngineImpl implements Engine<number, number, number> {
 	readonly camera: CameraImpl
 
 	constructor(private readonly options: EngineOptions) {
+		if(engine){
+			throw new Error("Engine is already created! Can't create another one.")
+		}
 		this.frameSkipCutoff = options.frameSkipCutoff ?? defaultFrameSkipTime
 		this.timePerTick = 1 / options.tickRate
-		this.physics = new PhysicsEngine(options.resourcePack, options.physics ?? {})
-		this.graphics = new GraphicEngine(options.resourcePack, options.container, this)
+		this.physics = new PhysicsEngine(options.physics ?? {})
+		this.graphics = new GraphicEngine(options.content, options.container, this)
 		this.camera = this.graphics.camera
-		this.input = new UserInputController(this, options.resourcePack)
+		this.input = new UserInputController(this, options.content)
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
+		engine = this
 	}
 
 	async init(): Promise<void> {
@@ -109,13 +120,13 @@ export class EngineImpl implements Engine<number, number, number> {
 		return this.input.cursorController.onTickCursorChange.getLastKnownEvent()
 	}
 
-	emitParticles(particleDefIndex: number, position: XY, direction: number): void {
+	emitParticles(particleDef: ParticleDefinition, position: XY, direction: number): void {
 		// TODO: think about viewport clipping...? we don't need to emit particles that are far out of viewport
 		// or too small because zoom is too low
-		this.graphics.emitParticles(particleDefIndex, position, direction)
+		this.graphics.emitParticles(particleDef, position, direction)
 	}
 
-	setBindHandlers(actionHandlers: Record<number, InputBindActions<number>>): void {
+	setBindHandlers(actionHandlers: Record<string, InputBindActions>): void {
 		this.input.keyController.setBindHandlers(actionHandlers)
 	}
 
