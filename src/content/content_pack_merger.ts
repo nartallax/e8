@@ -2,16 +2,20 @@ import {AtlasPart, Content, InputBindDefinition, ModelDefinition, ParticleDefini
 import {ContentPack, ContentPackModelPhysics} from "content/content_pack"
 import {omit} from "common/omit"
 import {contentPacksToAtlasses} from "content/atlas"
+import {runCodeOfContentPacks} from "content/content_pack_code_runner"
 
-/** This operation resolves paths in content packs, combining them into one single piece of content */
-export const mergeContentPacks = (packs: ContentPack[]): Content => {
+/** This operation resolves paths in content packs, combining them into one single piece of content
+Also runs JS code of the packs */
+export const mergeContentPacks = async(packs: ContentPack[]): Promise<Content> => {
+	const scale = getScale(packs)
+
 	const [atlasses, textureToAtlasPartMap] = contentPacksToAtlasses(packs)
 	const getCollisionGroupIndex = makeIndexResolver("collision group", packs.map(pack => pack.collisionGroups))
-	const scale = getScale(packs)
 
 	const allLayersMap = mergeMaps(packs.map(pack => pack.layers))
 	const namedOrderedLayers = [...allLayersMap.entries()].sort(([,a], [,b]) => a.drawPriority - b.drawPriority)
 
+	const entities = mergeMaps(await runCodeOfContentPacks(packs))
 
 	return {
 		inworldUnitPixelSize: scale,
@@ -20,7 +24,8 @@ export const mergeContentPacks = (packs: ContentPack[]): Content => {
 		inputBinds: getInputBinds(packs),
 		particles: getParticles(packs, textureToAtlasPartMap),
 		models: getModels(packs, textureToAtlasPartMap, getCollisionGroupIndex, scale),
-		atlasses
+		atlasses,
+		entities
 	}
 }
 

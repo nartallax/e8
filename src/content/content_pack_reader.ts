@@ -7,9 +7,9 @@ export const supportedTextureExtensions = [".svg"] as const
 export const contentPackFileExtensions = {
 	model: ".e8.model.json",
 	layer: ".e8.layer.json",
-	collisionGroup: ".e8.collisionGroup.json",
-	inputBind: ".e8.inputBind.json",
-	inputGroup: ".e8.inputGroup.json",
+	collisionGroup: ".e8.collision_group.json",
+	inputBind: ".e8.input_bind.json",
+	inputGroup: ".e8.input_group.json",
 	particle: ".e8.particle.json"
 }
 
@@ -18,7 +18,7 @@ const allKnownExtensions = [...Object.values(contentPackFileExtensions), ...supp
 export const contentPackFixedPaths = {
 	types: "types.d.ts",
 	entrypoint: "index.js",
-	description: "contentPack.json"
+	description: "content_pack.json"
 }
 
 const allFixedPaths = new Set(Object.values(contentPackFixedPaths))
@@ -64,7 +64,7 @@ export const readContentPackFromUrl = async(url: string): Promise<ContentPack> =
 	if(!descriptionEntry){
 		throw new Error(`Zip file at ${url} is not a valid content pack: no description file at ${contentPackFixedPaths.description}`)
 	}
-	const description: ContentPackDescription = await descriptionEntry.json()
+	const description = checkDescription(await descriptionEntry.json())
 
 	let js: string | undefined = undefined
 	const jsEntry = archiveFiles[contentPackFixedPaths.entrypoint]
@@ -146,4 +146,14 @@ export const readContentPackFromUrl = async(url: string): Promise<ContentPack> =
 		textures,
 		particles
 	}
+}
+
+const checkDescription = (description: ContentPackDescription): ContentPackDescription => {
+	// TODO: stronger validation
+	description.dependencies ||= {}
+	description.optionalDependencies ||= {}
+	description.displayName ||= description.identifier
+	description.description ||= ""
+	description.isStandalone ||= false
+	return description
 }

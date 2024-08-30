@@ -1,5 +1,7 @@
+import {EntityClass} from "entities/define_entity"
 import {XY} from "types"
 import {InputKey} from "user_input/inputs"
+import "user_input/inputs"
 
 /** Content is collection of everything that was defined in content-packs, processed and ready to be used in the engine */
 export type Content = {
@@ -11,7 +13,7 @@ export type Content = {
 	orderedLayers: [string, LayerDefinition][]
 	inputBinds: Map<string, InputBindDefinition>
 	particles: Map<string, ParticleDefinition>
-	// TODO: we should also have here entity definitions somehow. not sure how this will look like exactly
+	entities: Map<string, EntityClass>
 }
 
 export type Chord = InputKey[]

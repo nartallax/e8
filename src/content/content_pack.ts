@@ -64,16 +64,28 @@ export type ContentPackModel = Omit<ModelDefinition, "graphics" | "physics"> & {
 }
 
 export type ContentPackDescription = {
-	/** Identifier is a technical name for content pack.
+	/** Identifier of a content pack. Should be unique.
 	It is used as module name when importing, as file name of the pack, and possibly in other places.
 	Because of that, this name should be path-safe and many-other-things-safe. */
 	identifier: string
-	/** User-friendly name. Could be displayed in UI. */
-	name: string
 	/** Semver string of this content pack's version */
 	version: string
-	/** Some reference to author of this content pack */
+	/** displayName is user-friendly name. May contain arbitrary characters. */
+	displayName: string
+	/** Some user-friendly text to explain what the package is about */
+	description: string
+	/** Some reference to author of this content pack.
+	Only strings are supported; npm allows more stuff here than we support */
 	author?: string
+	/** List of dependencies that this content pack expects to be provided in runtime.
+	All content packs this content pack depends on must be referenced here.
+	Dependencies are loaded before content packs that depend on them.
+	Key is module name; value is semver-expression. Like { "e8:core": ">=2.1.0"}  */
+	dependencies: Record<string, string>
+	/** The same as dependencies, but can be absent in runtime.
+	This field is useful for controlling order of content pack loading.
+	Circular dependencies are not allowed, even optional. */
+	optionalDependencies: Record<string, string>
 	/** Standalone content pack is a game/piece of functionality in itself.
 	It's not usable from outside world and is not using anything from outside world.
 	Pros/cons/limitations for standalone content packs are:
@@ -81,7 +93,7 @@ export type ContentPackDescription = {
 	- it is not required to have type definitions
 	- can be compressed better than non-standalone content packs
 	- can have pre-built atlas layouts to speed up loading times */
-	isStandalone?: boolean
+	isStandalone: boolean
 	// MODDING: add references to other content packs here. with versions probably..?
 	// MODDING: prebuild atlas layout...? and maybe atlasses alltogether?
 	// MODDING: think about actually better compressing standalone content packs (throwing away archive tree in favor of some other way of storing tree...? just `tar`ing all the files in the archive...?)

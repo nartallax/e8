@@ -16,6 +16,7 @@
 
         "moduleResolution": "Node",
         "lib": ["dom", "ESNext"],
+        "esModuleInterop": true,
 
         "allowJs": false,
         
