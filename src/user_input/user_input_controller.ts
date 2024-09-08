@@ -1,5 +1,5 @@
 import {Content} from "content/content"
-import {EngineImpl} from "glue/engine"
+import {EngineImpl} from "engine/engine"
 import {UserCursorInputController} from "user_input/cursor/user_cursor_input_controller"
 import {UserKeyInputController} from "user_input/keys/user_key_input_controller"
 

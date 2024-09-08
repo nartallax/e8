@@ -1,4 +1,4 @@
-import {EngineImpl} from "glue/engine"
+import {EngineImpl} from "engine/engine"
 import {Event, EventImpl} from "common/event"
 import {EntityImpl} from "entities/entity"
 import {XY} from "common_types"

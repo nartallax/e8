@@ -1,6 +1,6 @@
 import {Content, ParticleDefinition} from "content/content"
 import {EntityImpl} from "entities/entity"
-import {EngineImpl} from "glue/engine"
+import {EngineImpl} from "engine/engine"
 import {CameraImpl} from "graphics/camera"
 import {createWebgl2Canvas, setViewportSizeByCanvas} from "graphics/canvas"
 import {AttribDataPack, AttribInstance, ShaderAttribs} from "graphics/graphic_types"

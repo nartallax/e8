@@ -1,5 +1,5 @@
 import {ModelDefinition} from "content/content"
-import {engine} from "glue/engine"
+import {engine} from "engine/engine"
 import {EntityGraphicsFieldType} from "graphics/graphics_engine"
 import {EntityPhysFieldType} from "physics/physics_engine"
 import {XY} from "common_types"
