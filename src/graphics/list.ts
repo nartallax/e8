@@ -1,5 +1,5 @@
 /** List is a sequental collection that allows to add and delete items in arbitrary order */
-export interface List<T> {
+export type List<T> = {
 	append(value: T): void
 	delete(index: number): void
 	get(index: number): T

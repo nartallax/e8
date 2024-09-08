@@ -1,6 +1,6 @@
 import {InputBindDefinition, LayerDefinition, ModelDefinition, ModelPhysics, ParticleDefinition} from "content/content"
 import {supportedTextureExtensions} from "content/content_pack_reader"
-import {XY} from "types"
+import {XY} from "common_types"
 
 export type ContentPack = {
 	description: ContentPackDescription

@@ -1,5 +1,5 @@
 import {EntityClass} from "entities/define_entity"
-import {XY} from "types"
+import {XY} from "common_types"
 import {InputKey} from "user_input/inputs"
 import "user_input/inputs"
 
@@ -80,21 +80,21 @@ export type AtlasPartWithLayer = AtlasPart & {
 }
 
 export type ModelPhysics = {
-	isStatic: boolean
+	readonly isStatic: boolean
 	// TODO: make nullable
 	// null means "don't collide with anything", but will still participate in queries like "what's in this point of space"
-	collisionGroup: number // integer, 0-31
-	collisionGroupMask: number
+	readonly collisionGroup: number // integer, 0-31
+	readonly collisionGroupMask: number
 	/** Shapes are convex polygons.
 	 * More than one can be specified if source polygon was concave, or if there's detached polygon */
-	shapes: Matter.Vector[][] | null
-	shapesLowerBounds: XY
+	readonly shapes: Matter.Vector[][] | null
+	readonly shapesLowerBounds: XY
 }
 
 /** A model is a template for some object in the world */
-export interface ModelDefinition {
+export type ModelDefinition = {
 	/** Width and height in ingame units. */
-	size: XY
-	graphics: AtlasPartWithLayer | null
-	physics: ModelPhysics | null
+	readonly size: XY
+	readonly graphics: AtlasPartWithLayer | null
+	readonly physics: ModelPhysics | null
 }

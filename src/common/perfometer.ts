@@ -1,6 +1,6 @@
 export namespace Perf {
 
-	interface Counter {
+	type Counter = {
 		name: string
 		depth: number
 		count: number

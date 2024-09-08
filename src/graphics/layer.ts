@@ -1,9 +1,9 @@
-import {Perf} from "glue/perfometer"
+import {Perf} from "common/perfometer"
 import {AttribDataPack, AttribInstance, Shader, ShaderAttribs} from "graphics/graphic_types"
 import {ArrayList} from "graphics/list"
 import {Pool} from "graphics/pool"
 
-export interface GraphicLayer<S extends Shader> {
+export type GraphicLayer<S extends Shader> = {
 	tryUpload(frame: number): void
 	upload(): void
 	makeInstance(): AttribInstance<ShaderAttribs<S>>

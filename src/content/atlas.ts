@@ -1,7 +1,7 @@
 import {buildAtlasLayout} from "content/build_atlas_layout"
 import {Atlas, AtlasPart} from "content/content"
 import {ContentPack} from "content/content_pack"
-import {XY} from "types"
+import {XY} from "common_types"
 import * as XmlJs from "xml-js"
 
 type SvgTextureFile = {

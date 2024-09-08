@@ -1,5 +1,5 @@
 import {Growable2DBitmap} from "common/bitmap/growable_2d_bitmap"
-import {XY} from "types"
+import {XY} from "common_types"
 
 type Rect = {
 	width: number

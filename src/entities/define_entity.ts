@@ -1,11 +1,8 @@
 import {markValue} from "common/marker/marker"
-import {Entity} from "entities/entity"
+import {Entity, EntityImpl} from "entities/entity"
+import {Cls, Mixin, MixinArray, MixinArrayMixingResult} from "mixins/mixin"
 
-type EntityClassBase<T extends Entity = Entity> = {
-	new(): T
-}
-
-export type EntityClass<T extends Entity = Entity> = EntityClassBase<T> & {
+export type EntityClass<T extends Entity = Entity> = Cls<T> & {
 	spawn(): T
 	spawnAt(x: number, y: number, rotation?: number): T
 }
@@ -24,8 +21,16 @@ export const collectEntitiesDuringDefining = async <T>(runner: () => Promise<T>)
 	}
 }
 
-export function defineEntity<T extends Entity>(cls: EntityClassBase<T>): EntityClass<T> {
+export function makeEntityBase<T extends object[]>(...mixins: MixinArray<T>): Cls<MixinArrayMixingResult<T> & Entity> {
+	return Mixin.mix(EntityImpl, mixins)
+}
+
+export function defineEntity<T extends EntityImpl>(cls: Cls<T>): EntityClass<T> {
 	const result = cls as EntityClass<T>
+
+	if(!(cls.prototype instanceof EntityImpl)){
+		throw new Error("Value passed to defineEntity() does not extend base entity class. Extend class returned by makeEntityBase function.")
+	}
 
 	result.spawn = function() {
 		const entity = new this()

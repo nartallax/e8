@@ -2,7 +2,7 @@ import {ArrayList, List} from "graphics/list"
 
 /** A pool is kind of buffer for some items.
  * It allows to avoid unnecessary item creation/deletion in cases when they are frequently acquired/released */
-export interface Pool<T> {
+export type Pool<T> = {
 	acquire(): T
 	release(value: T): void
 	shutdown(): void

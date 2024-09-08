@@ -1,11 +1,14 @@
-import {ParticleDefinition} from "content/content"
-import {EventImpl} from "glue/event"
-import {Perf} from "glue/perfometer"
-import {CameraImpl} from "graphics/camera"
+import {Content, ParticleDefinition} from "content/content"
+import {Event, EventImpl} from "common/event"
+import {Perf} from "common/perfometer"
+import {Camera, CameraImpl} from "graphics/camera"
 import {GraphicEngine} from "graphics/graphics_engine"
 import {PhysicsEngine} from "physics/physics_engine"
-import {XY, CursorMoveInputEvent, Engine, EngineOptions, InputBindActions} from "types"
+import {XY} from "common_types"
 import {UserInputController} from "user_input/user_input_controller"
+import {InputBindActions} from "user_input/keys/user_key_input_controller"
+import {CursorMoveInputEvent} from "user_input/cursor/user_cursor_input_controller"
+import * as Matter from "libs/matterjs/matter"
 
 const defaultFrameSkipTime = 0.25
 
@@ -13,6 +16,44 @@ const defaultFrameSkipTime = 0.25
 // it's not wrong to have multiple engine instances in runtime for whatever reason
 // but each content pack set should see their own engine
 export let engine: EngineImpl = null as any
+
+export type Engine = {
+	readonly camera: Camera
+	/** Amount of time passed while engine was running, in seconds. */
+	readonly timePassed: number
+	setBindHandlers(actionHandlers: Record<string, InputBindActions>): void
+	setTickCursorHandler(handler: ((event: CursorMoveInputEvent) => void) | null): void
+	getLastKnownCursorEvent(): CursorMoveInputEvent
+	/** Event "ingame tick is about to be processed" */
+	readonly onTick: Event<[deltaTime: number]>
+	/** Start the engine.
+	 * The ticks will start ticking, frames start drawing etc. */
+	start(): void
+	/** Stop the engine.
+	 * You can resume engine later from the point you stopped it on */
+	stop(): void
+	emitParticles(particleDef: ParticleDefinition, position: XY, direction: number): void
+}
+
+export type EngineOptions = {
+	readonly content: Content
+	/** Canvas will be created inside this element */
+	readonly container: HTMLElement
+	/** Amount of ticks per second this engine will aim for.
+	 * This is not FPS, as ticks are not strictly connected to frames. */
+	readonly tickRate: number
+	/** If enabled, engine will stop after first error thrown in the game loop.
+	 * Mostly meant for development, no reason to enable this in release.
+	 * Also, engine expects that main loop will never throw;
+	 * i.e. throw in the main loop = inconsistent state, game broken */
+	readonly stopOnFirstFail?: boolean
+	/** Number of seconds. If time between previous and current frame is bigger than this - current frame is skipped. Has a default value.
+	 * This could help detect and mitigate overloads */
+	readonly frameSkipCutoff?: number
+	readonly physics?: Matter.IEngineDefinition
+	/** How much times, per seconds, debug stats should be dumped into console */
+	readonly debugStatsDumpRate?: number
+}
 
 export class EngineImpl implements Engine {
 

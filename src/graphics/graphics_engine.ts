@@ -1,5 +1,5 @@
 import {Content, ParticleDefinition} from "content/content"
-import {Entity} from "entities/entity"
+import {EntityImpl} from "entities/entity"
 import {EngineImpl} from "glue/engine"
 import {CameraImpl} from "graphics/camera"
 import {createWebgl2Canvas, setViewportSizeByCanvas} from "graphics/canvas"
@@ -10,7 +10,7 @@ import {MainShader, makeMainShader} from "graphics/webgl/shaders/main_shader/mai
 import {ParticleShader, makeParticleShader} from "graphics/webgl/shaders/particle_shader/particle_shader"
 import {makeSquareIndexBuffer, makeSquareVertexBuffer} from "graphics/webgl/square_buffer_creation"
 import {loadSvgAsTexture} from "graphics/webgl/texture"
-import {XY} from "types"
+import {XY} from "common_types"
 
 export type EntityGraphicsFieldType = AttribInstance<ShaderAttribs<MainShader>> | null
 
@@ -27,7 +27,7 @@ export class GraphicEngine {
 	private readonly particlePool: Pool<AttribDataPack<ShaderAttribs<ParticleShader>>>
 	private readonly mainLayers: readonly GraphicLayer<MainShader>[]
 	private readonly layers: readonly GraphicLayer<SomeShader>[]
-	private readonly visibleEntities = new Set<Entity>()
+	private readonly visibleEntities = new Set<EntityImpl>()
 	readonly canvas: HTMLCanvasElement
 	private screenHeight: number = 0
 	private screenWidth: number = 0
@@ -85,7 +85,7 @@ export class GraphicEngine {
 		this.atlasTexture = await loadSvgAsTexture(this.gl, svg)
 	}
 
-	addEntity(entity: Entity): void {
+	addEntity(entity: EntityImpl): void {
 		if(entity.graphics !== null){
 			throw new Error("Assertion failed: double-add graphics")
 		}
@@ -108,7 +108,7 @@ export class GraphicEngine {
 		this.visibleEntities.add(entity)
 	}
 
-	removeEntity(entity: Entity): void {
+	removeEntity(entity: EntityImpl): void {
 		if(entity.graphics === null){
 			throw new Error("Assertion failed: double-delete graphics")
 		}
@@ -142,7 +142,8 @@ export class GraphicEngine {
 
 		if(this.camera.currentRevision !== shader.uniformRevisions.camera){
 			shader.uniformRevisions.camera = this.camera.currentRevision
-			shader.setCamera(this.camera.x, this.camera.y, this.camera.zoom)
+			const cameraCenter = this.camera.getCenter()
+			shader.setCamera(cameraCenter.x, cameraCenter.y, this.camera.getZoom())
 		}
 
 		const screenSizeNumber = this.screenHeight << 16 | this.screenWidth

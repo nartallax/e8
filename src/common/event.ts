@@ -1,12 +1,16 @@
-import {Event} from "types"
-
 const noop = () => {}
 
 type Handler<A extends unknown[]> = (...args: A) => void
 
-interface EventImplParams {
+type EventImplParams = {
 	readonly onFirstSub?: () => void
 	readonly onLastUnsub?: () => void
+}
+
+export type Event<A extends unknown[] = []> = {
+	sub(handler: (...args: A) => void): void
+	unsub(handler: (...args: A) => void): void
+	fire(...args: A): void
 }
 
 export class EventImpl<A extends unknown[]> implements Event<A> {
@@ -20,6 +24,7 @@ export class EventImpl<A extends unknown[]> implements Event<A> {
 	// it's not really needed, or even noticeable, but it'll bug me
 	// (most of events have only one subscriber,
 	// so most of the time it's nice to just call it instead of iterating the array)
+	// TODO: perf-test this assumption. maybe v8 has some smart optimizations around functions-as-properties
 	public fire: Handler<A> = noop
 
 	sub(handler: (...args: A) => void): void {

@@ -2,10 +2,23 @@ import {ModelDefinition} from "content/content"
 import {engine} from "glue/engine"
 import {EntityGraphicsFieldType} from "graphics/graphics_engine"
 import {EntityPhysFieldType} from "physics/physics_engine"
-import {XY} from "types"
+import {XY} from "common_types"
+
+export type Entity = {
+	readonly x: number
+	readonly y: number
+	readonly rotation: number
+	readonly model: ModelDefinition | null
+	add(): void
+	remove(): void
+	move(coords: XY, rotation: number): void
+	// TODO: vectors here
+	applyForce(xForce: number, yForce: number, xOffset?: number, yOffset?: number): void
+	handleCollision(otherEntity: Entity): void
+}
 
 /** This is base entity class. Any entity defined by content pack must extend this class */
-export class Entity {
+export class EntityImpl implements Entity {
 	x = 0
 	y = 0
 	rotation = 0
@@ -50,7 +63,7 @@ export class Entity {
 		engine.physics.applyForceToEntity(this, xForce, yForce, xOffset, yOffset)
 	}
 
-	handleCollision(otherEntity: Entity): void {
+	handleCollision(otherEntity: EntityImpl): void {
 		// nothing by default
 		void otherEntity
 	}

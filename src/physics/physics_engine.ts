@@ -1,6 +1,6 @@
-import {Entity} from "entities/entity"
+import {EntityImpl} from "entities/entity"
 import * as Matter from "libs/matterjs/matter"
-import {XY} from "types"
+import {XY} from "common_types"
 
 // just need some identifier to add as plugin key
 const mjsPluginName = Symbol("nartallax-plugin-id")
@@ -21,7 +21,7 @@ export class PhysicsEngine {
 	// also, if we ever will have a lot of non-moving objects -
 	// we'll need to add optimization layer over matterjs
 	// it can be done with rtree, see shuttle project
-	private readonly movingEntities = new Set<Entity>()
+	private readonly movingEntities = new Set<EntityImpl>()
 	private readonly addToMovingEntitiesEventHandler = (e: Matter.IEvent<Matter.Body>) =>
 		this.movingEntities.add(getBodyEntity(e.source))
 	private readonly removeFromMovingEntitiesEventHandler = (e: Matter.IEvent<Matter.Body>) =>
@@ -38,14 +38,14 @@ export class PhysicsEngine {
 
 	private processCollisionEvent(e: Matter.IEventCollision<Matter.Engine>): void {
 		for(const pair of e.pairs){
-			const a: Entity = getBodyEntity(pair.bodyA)
-			const b: Entity = getBodyEntity(pair.bodyB)
+			const a: EntityImpl = getBodyEntity(pair.bodyA)
+			const b: EntityImpl = getBodyEntity(pair.bodyB)
 			a.handleCollision(b)
 			b.handleCollision(a)
 		}
 	}
 
-	addEntity(entity: Entity): void {
+	addEntity(entity: EntityImpl): void {
 		if(entity.phys){
 			throw new Error("Assertion failed, entity has body")
 		}
@@ -91,7 +91,7 @@ export class PhysicsEngine {
 		Matter.Events.on(body, "sleepEnd", this.addToMovingEntitiesEventHandler)
 	}
 
-	removeEntity(entity: Entity): void {
+	removeEntity(entity: EntityImpl): void {
 		const body = entity.phys
 		if(!body){
 			// no assertion here. entity can have no body if there's no shape
@@ -118,7 +118,7 @@ export class PhysicsEngine {
 		this.tickCount++
 	}
 
-	moveEntity(entity: Entity, coords: XY, rotation: number): void {
+	moveEntity(entity: EntityImpl, coords: XY, rotation: number): void {
 		entity.x = coords.x
 		entity.y = coords.y
 		entity.rotation = rotation
@@ -131,7 +131,7 @@ export class PhysicsEngine {
 		entity.currentGraphicVersion++
 	}
 
-	applyForceToEntity(entity: Entity, xForce: number, yForce: number, entityOffsetX: number, entityOffsetY: number): void {
+	applyForceToEntity(entity: EntityImpl, xForce: number, yForce: number, entityOffsetX: number, entityOffsetY: number): void {
 		const body = entity.phys
 		if(!body){
 			return
@@ -156,9 +156,9 @@ export class PhysicsEngine {
 	}
 }
 
-function getBodyEntity(body: Matter.Body): Entity {
+function getBodyEntity(body: Matter.Body): EntityImpl {
 	while(true){
-		const entity: Entity = body.plugin[mjsPluginName]
+		const entity: EntityImpl = body.plugin[mjsPluginName]
 		if(entity){
 			return entity
 		}

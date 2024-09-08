@@ -1,7 +1,14 @@
 import {InputBindDefinition} from "content/content"
-import {InputBindActions} from "types"
 import {InputKey, browserKeyboardCodeToInputKey, knownMouseButtonInputs} from "user_input/inputs"
 import {InputKeyActionSet, InputKeyActionSourceBind, InputKeyEvent} from "user_input/keys/input_key_action_set"
+
+export type InputBindActions = InputBindActionsObj | InputBindActionFn
+export type InputBindActionFn = ((deltaTime: number, meta: {binds: Set<string>, count: number}) => void)
+export type InputBindActionsObj = {
+	onDown?: InputBindActionFn
+	onHold?: InputBindActionFn
+	onUp?: InputBindActionFn
+}
 
 export class UserKeyInputController {
 	private downKeys: ReadonlySet<InputKey> = new Set()

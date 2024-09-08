@@ -19,7 +19,7 @@ describe("Mixin", () => {
 			}
 		})
 
-		const MyObj = class extends Mixin.mix([MixinA]) {}
+		const MyObj = class extends Mixin.mix(Object, [MixinA]) {}
 		const myObj = new MyObj()
 		expect(myObj.getId()).to.eql("10")
 	})
@@ -42,7 +42,7 @@ describe("Mixin", () => {
 				this.height -= 4
 			}
 		})
-		const Cls = class extends Mixin.mix([A, AAA]) {}
+		const Cls = class extends Mixin.mix(Object, [A, AAA]) {}
 		const obj = new Cls()
 		expect(obj.age).to.eql(37)
 		expect(obj.height).to.eql(176)
@@ -62,7 +62,7 @@ describe("Mixin", () => {
 			age = 20
 		})
 
-		const result = new(Mixin.mix([A, B]))()
+		const result = new(Mixin.mix(Object, [A, B]))()
 		expect(result.height).to.eql(180)
 		expect(result.age).to.eql(20)
 	})
@@ -82,7 +82,7 @@ describe("Mixin", () => {
 			}
 		})
 
-		const result = new(Mixin.mix([AB]))()
+		const result = new(Mixin.mix(Object, [AB]))()
 		expect(result.height).to.eql(90)
 		expect(result.age).to.eql(40)
 	})
@@ -99,7 +99,7 @@ describe("Mixin", () => {
 			age = 51
 		})
 
-		const obj = new(Mixin.mix([A, B]))()
+		const obj = new(Mixin.mix(Object, [A, B]))()
 		expect(obj.id).to.eql(1)
 		expect(obj.name).to.eql("uwu")
 		expect(obj.age).to.eql(51)
@@ -127,7 +127,7 @@ describe("Mixin", () => {
 			}
 		})
 
-		const obj = new(Mixin.mix([AB]))()
+		const obj = new(Mixin.mix(Object, [AB]))()
 		expect(obj.id).to.eql(2)
 		expect(obj.name).to.eql("uwuuwu")
 		expect(obj.age).to.eql(55)

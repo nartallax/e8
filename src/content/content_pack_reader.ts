@@ -1,4 +1,5 @@
 import {ContentPack, ContentPackCollisionGroup, ContentPackDescription, ContentPackInputBind, ContentPackInputGroup, ContentPackLayer, ContentPackModel, ContentPackParticle, ContentPackTexture} from "content/content_pack"
+// TODO: custom format instead of zip
 import * as Unzipit from "unzipit"
 
 // TODO: support png at least

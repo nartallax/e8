@@ -1,9 +1,9 @@
 import {GlVecSize, SettersByArity, ShaderFieldSizeMap, ShaderField, AttribInstance, AttribDataPack, SetterName, SetterMap} from "graphics/graphic_types"
 import {makeAttribArrayCreator} from "graphics/webgl/shader_builder/attributes"
 import {makeGetterName, makeSetterName} from "graphics/webgl/graphic_utils"
-import {Perf} from "glue/perfometer"
+import {Perf} from "common/perfometer"
 
-interface AttribDataPackInternal<A extends ShaderFieldSizeMap<string>> extends AttribDataPack<A> {
+type AttribDataPackInternal<A extends ShaderFieldSizeMap<string>> = AttribDataPack<A> & {
 	itemCount: number
 	readonly data: readonly (Float32Array | Int32Array | Uint32Array)[]
 	readonly instances: (AttribInstance<A> | null)[]

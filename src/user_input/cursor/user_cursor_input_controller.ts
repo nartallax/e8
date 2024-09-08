@@ -1,6 +1,11 @@
-import {EventImpl} from "glue/event"
-import {CursorMoveInputEvent, XY} from "types"
+import {EventImpl} from "common/event"
+import {XY} from "common_types"
 import {UserInputController} from "user_input/user_input_controller"
+
+export type CursorMoveInputEvent = {
+	/** Coords of mouse cursor in inworld units */
+	readonly inworldCoords: XY
+}
 
 export class UserCursorInputController {
 	private userTickHandler: ((event: CursorMoveInputEvent) => void) | null = null
@@ -30,6 +35,7 @@ export class UserCursorInputController {
 	}
 
 	constructor(readonly inputController: UserInputController) {
+		// this is to avoid situation when cursor didn't move, but camera did, so now cursor points to something else
 		inputController.engine.camera.onChange.sub(() => this.currentRevision++)
 		this.onTickCursorChange = new CursorEvent(this)
 		this.onFrameCursorChange = new CursorEvent(this)

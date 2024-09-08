@@ -1,14 +1,14 @@
 import {sortBy} from "common/sort_by"
-import {Chord} from "resource_pack/resource_pack"
-import {InputBindActionFn, InputBindActionsObj} from "types"
+import {Chord} from "content/content"
 import {InputKey} from "user_input/inputs"
+import {InputBindActionFn, InputBindActionsObj} from "user_input/keys/user_key_input_controller"
 
-export interface InputKeyEvent {
+export type InputKeyEvent = {
 	readonly isDown: boolean
 	readonly key: InputKey
 }
 
-export interface InputKeyActionCallData {
+export type InputKeyActionCallData = {
 	readonly handler: InputBindActionFn
 	/** How much times user pressed the chord.
 	 * For hold actions this number doesn't mean anything. */
@@ -18,14 +18,14 @@ export interface InputKeyActionCallData {
 	readonly binds: Set<string>
 }
 
-export interface InputKeyActionSearchResult {
+export type InputKeyActionSearchResult = {
 	readonly down: readonly InputKeyActionCallData[]
 	readonly up: readonly InputKeyActionCallData[]
 	readonly hold: readonly InputKeyActionCallData[]
 	readonly newDownKeys: ReadonlySet<InputKey>
 }
 
-interface Action {
+type Action = {
 	/** Excludes main key for the action, for sake of performance */
 	readonly chord: BitSet
 	readonly chordSize: number
@@ -50,7 +50,7 @@ interface Action {
  * Hope it will be enough. */
 type ActionMap = ReadonlyMap<InputKey, readonly Action[]>
 
-export interface InputKeyActionSourceBind {
+export type InputKeyActionSourceBind = {
 	readonly name: string
 	readonly handlers: InputBindActionsObj
 	readonly chords: readonly Chord[]

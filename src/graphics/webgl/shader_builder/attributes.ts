@@ -1,6 +1,6 @@
 import {ShaderFieldSizeMap, ShaderField} from "graphics/graphic_types"
 
-interface AttribArraysAndData {
+type AttribArraysAndData = {
 	// all linked by index
 	data: (Float32Array | Int32Array | Uint32Array)[]
 	buffers: WebGLBuffer[]

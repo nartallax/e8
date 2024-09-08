@@ -1,6 +1,6 @@
 import {markValue} from "common/marker/marker"
 
-type Cls<T> = {new(): T}
+export type Cls<T> = {new(): T}
 type MixinMaker<T, P> = (parentClass: Cls<P>) => Cls<T & P>
 export type MixinArray<T extends object[]> = [...{[I in keyof T]: Mixin<T[I]>}]
 export type MixinArrayMixingResult<T extends object[]> = T extends [infer First, ...infer Rest extends object[]] ? First & MixinArrayMixingResult<Rest> : unknown
@@ -62,7 +62,7 @@ export class Mixin<T extends object> {
 		return args.length === 1 ? new Mixin([], args[0]) : new Mixin(args[0], args[1])
 	}
 
-	static mix<Ts extends object[]>(mixins: MixinArray<Ts>): Cls<MixinArrayMixingResult<Ts>> {
+	static mix<B extends object, Ts extends object[]>(base: Cls<B>, mixins: MixinArray<Ts>): Cls<MixinArrayMixingResult<Ts> & B> {
 		const allMixins = [...new Set([
 			...mixins,
 			...mixins.map(x => x.gatherAncestors()).flat()
@@ -77,11 +77,11 @@ export class Mixin<T extends object> {
 					: a.index < b.index ? -1
 						: a.index > b.index ? 1 : 0)
 
-		let result: Cls<unknown> = Object
+		let result = base
 		for(const mixin of allMixins){
 			result = mixin.makeClass(result)
 		}
-		return result as Cls<MixinArrayMixingResult<Ts>>
+		return result as Cls<MixinArrayMixingResult<Ts> & B>
 	}
 }
 

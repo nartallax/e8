@@ -20,7 +20,7 @@ export type AttribInstance<A extends ShaderFieldSizeMap<string> = ShaderFieldSiz
 }
 
 /** Pack of AttribInstances. Drawn with one draw-call. */
-export interface AttribDataPack<A extends ShaderFieldSizeMap<string>> {
+export interface AttribDataPack<A extends ShaderFieldSizeMap<string>>{
 	readonly freeSlots: number // amount of models that can be created in this pack
 	readonly itemCount: number // amount of models actually in the pack
 	makeInstance(): AttribInstance<A>
@@ -56,7 +56,7 @@ export type ShaderFieldSizeMap<N extends string> = Readonly<Record<N, GlVecSize>
 export type ShaderNumberType = "float" | "int" | "uint"
 export type ShaderFieldType = ShaderNumberType | "sampler2D"
 
-export interface ShaderSourceField<N extends string, S extends GlVecSize = 1, T extends ShaderFieldType = ShaderFieldType>{
+export type ShaderSourceField<N extends string, S extends GlVecSize = 1, T extends ShaderFieldType = ShaderFieldType> = {
 	readonly name: N
 	/** Type of the fields. Defaults to float. */
 	readonly type: T
@@ -67,7 +67,7 @@ export interface ShaderSourceField<N extends string, S extends GlVecSize = 1, T 
 	readonly size: S
 }
 
-export interface ShaderField<M extends ShaderFieldSizeMap<string> = ShaderFieldSizeMap<string>> {
+export type ShaderField<M extends ShaderFieldSizeMap<string> = ShaderFieldSizeMap<string>> = {
 	readonly type: ShaderFieldType
 	readonly name: string
 	// each actual shader field can be a group of several other user-defined shader fields
@@ -77,7 +77,7 @@ export interface ShaderField<M extends ShaderFieldSizeMap<string> = ShaderFieldS
 	readonly resetValue: number | null
 }
 
-export interface ShaderSource<A extends ShaderFieldSizeMap<string>, U extends ShaderFieldSizeMap<string>> {
+export type ShaderSource<A extends ShaderFieldSizeMap<string>, U extends ShaderFieldSizeMap<string>> = {
 	readonly code: string
 	readonly attributes: readonly ShaderField<A>[]
 	readonly uniforms: readonly ShaderField<U>[]
