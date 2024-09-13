@@ -1,13 +1,12 @@
 import {BinformatCoderBase} from "common/binformat/binformat_coder_base"
 
 export abstract class BinformatDecoder<T> extends BinformatCoderBase {
-	private index = 0
 	private hasResult = false
 	private result: T | null = null
-
+	private readonly dblBuffer = new DataView(new ArrayBuffer(8))
 	protected abstract readRootValue(): T
 
-	constructor(private readonly buffer: Uint8Array) {
+	constructor(protected readonly buffer: Uint8Array, protected index = 0) {
 		super()
 	}
 
@@ -76,13 +75,31 @@ export abstract class BinformatDecoder<T> extends BinformatCoderBase {
 
 	protected readByteArray(): Uint8Array {
 		const length = this.readUint()
-		const result = this.buffer.slice(this.index, length)
+		return this.readByteArrayContent(length)
+	}
+
+	protected readPrefixedByteArray(prefixBits: number): Uint8Array {
+		const length = this.readPrefixedUint(prefixBits)
+		return this.readByteArrayContent(length)
+	}
+
+	protected readByteArrayContent(length: number): Uint8Array {
+		const result = this.buffer.slice(this.index, this.index + length)
 		this.index += length
 		return result
 	}
 
 	protected readString(): string {
 		const length = this.readUint()
+		return this.readStringContent(length)
+	}
+
+	protected readPrefixedString(prefixBits: number): string {
+		const length = this.readPrefixedUint(prefixBits)
+		return this.readStringContent(length)
+	}
+
+	private readStringContent(length: number): string {
 		let result = ""
 		for(let i = 0; i < length; i++){
 			result += String.fromCharCode(this.readUint())
@@ -92,5 +109,33 @@ export abstract class BinformatDecoder<T> extends BinformatCoderBase {
 
 	protected readByte(): number {
 		return this.buffer[this.index++]!
+	}
+
+	protected readPrefixedByte(prefixBitLength: number): number {
+		return this.readByte() >> prefixBitLength
+	}
+
+	protected readDouble(): number {
+		for(let i = 0; i < 8; i++){
+			this.dblBuffer.setUint8(i, this.readByte())
+		}
+		return this.dblBuffer.getFloat64(0)
+	}
+
+	protected peekByte(): number {
+		return this.buffer[this.index]!
+	}
+
+	protected peekPrefix(bits: number): number {
+		return (this.buffer[this.index]! & ((1 << bits) - 1))
+	}
+
+	protected readPrefixedUint(prefixBits: number): number {
+		const result = this.readUint()
+		return Math.floor(result / (1 << prefixBits))
+	}
+
+	protected isAtEndOfFile(): boolean {
+		return this.index >= this.buffer.length
 	}
 }

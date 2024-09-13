@@ -3,6 +3,8 @@ export {knownMouseButtonInputs, knownKeyboardInputs, knownMouseWheelInputs} from
 
 export type {XY} from "common_types"
 
+export * from "common/tree"
+
 export type {Engine} from "engine/engine"
 export {createEngineFromContentPackUrls} from "engine/loader"
 

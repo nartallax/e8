@@ -1,13 +1,11 @@
-import {nonNull} from "common/non_null"
-
 export type Tree<T, B> = TreeLeaf<T> | TreeBranch<T, B>
+export type Forest<T, B> = readonly Tree<T, B>[]
+
+/** Tree path is a sequence of indices (first being index of root in a forest) that point to some element in tree */
+export type TreePath = readonly number[]
 
 export interface TreeLeaf<T>{
 	readonly value: T
-}
-
-export function isTreeLeaf<T, B>(x: Tree<T, B>): x is TreeLeaf<T> {
-	return !isTreeBranch(x)
 }
 
 export interface TreeBranch<T, B>{
@@ -15,70 +13,70 @@ export interface TreeBranch<T, B>{
 	readonly children: readonly Tree<T, B>[]
 }
 
-export function isTreeBranch<T, B>(x: Tree<T, B>): x is TreeBranch<T, B> {
+export const isTreeBranch = <T, B>(x: Tree<T, B>): x is TreeBranch<T, B> => {
 	return "children" in x
 }
 
-export function getTreeLeaves<T, B>(tree: Tree<T, B>): IterableIterator<[readonly TreeBranch<T, B>[], T]> {
-	return getTreeLeavesInternal(tree, [])
+export const getForestLeaves = <T, B>(forest: Forest<T, B>): IterableIterator<[TreePath, T]> => {
+	return getForestLeavesInternal(forest, [])
 }
 
-function* getTreeLeavesInternal<T, B>(tree: Tree<T, B>, parents: TreeBranch<T, B>[]): IterableIterator<[readonly TreeBranch<T, B>[], T]> {
-	if(isTreeLeaf(tree)){
-		yield[parents, tree.value]
-	} else {
-		parents.push(tree)
-		for(const child of tree.children){
-			yield* getTreeLeavesInternal(child, parents)
-		}
-		parents.pop()
+export const getLeafByPath = <T, B>(forest: Forest<T, B>, path: TreePath): T => {
+	const tree = getTreeByPath(forest, path)
+	if(isTreeBranch(tree)){
+		throw new Error("Path does not point to tree leaf, but to tree branch.")
 	}
+	return tree.value
 }
 
-export function findOneLeafInTrees<T, B>(trees: readonly Tree<T, B>[], isThisIt: (value: T) => boolean): TreeLeaf<T> | undefined {
-	for(const tree of trees){
-		const result = findOneLeaf(tree, isThisIt)
-		if(result !== undefined){
+export const getAllTreesByPath = <T, B>(forest: Forest<T, B>, path: TreePath): Tree<T, B>[] => {
+	const result: Tree<T, B>[] = []
+	for(let i = 0; i < path.length; i++){
+		const currentKey = path[i]!
+		const nextTree = forest[currentKey]
+		if(i === path.length - 1){
+			if(!nextTree){
+				throw new Error("Path does not point to tree node.")
+			}
+			result.push(nextTree)
 			return result
 		}
+		if(!nextTree || !isTreeBranch(nextTree)){
+			throw new Error("Path does not point to tree node.")
+		}
+		result.push(nextTree)
+		forest = nextTree.children
 	}
-	return undefined
+	throw new Error("Path does not point to tree node.")
 }
 
-export function findOneLeaf<T, B>(tree: Tree<T, B>, isThisIt: (value: T) => boolean): TreeLeaf<T> | undefined {
-	if(isTreeBranch(tree)){
-		for(const child of tree.children){
-			const result = findOneLeaf(child, isThisIt)
-			if(result !== undefined){
-				return result
+export const getTreeByPath = <T, B>(forest: Forest<T, B>, path: TreePath): Tree<T, B> => {
+	for(let i = 0; i < path.length; i++){
+		const currentKey = path[i]!
+		const nextTree = forest[currentKey]
+		if(i === path.length - 1){
+			if(!nextTree){
+				throw new Error("Path does not point to tree node.")
 			}
+			return nextTree
 		}
-	} else if(isThisIt(tree.value)){
-		return tree
+		if(!nextTree || !isTreeBranch(nextTree)){
+			throw new Error("Path does not point to tree node.")
+		}
+		forest = nextTree.children
 	}
-	return undefined
+	throw new Error("Path does not point to tree node.")
 }
 
-export function filterTreeLeaves<T, B>(tree: Tree<T, B>, shouldKeepLeaf: (value: T) => boolean): Tree<T, B> | null {
-	if(isTreeLeaf(tree)){
-		if(!shouldKeepLeaf(tree.value)){
-			return null
+function* getForestLeavesInternal<T, B>(forest: Forest<T, B>, path: TreePath): IterableIterator<[TreePath, T]> {
+	let i = -1
+	for(const tree of forest){
+		i++
+		const itemPath = [...path, i]
+		if(isTreeBranch(tree)){
+			yield* getForestLeavesInternal(tree.children, itemPath)
+		} else {
+			yield[itemPath, tree.value]
 		}
-		return tree
 	}
-
-	const newChildren = tree.children
-		.map(x => filterTreeLeaves(x, shouldKeepLeaf))
-		.filter(nonNull)
-
-	return {children: newChildren, value: tree.value}
-}
-
-export function mapTreeLeaves<T, B, R>(tree: Tree<T, B>, map: (value: T) => R): Tree<R, B> {
-	if(isTreeLeaf(tree)){
-		return {value: map(tree.value)}
-	}
-
-	const newChildren = tree.children.map(x => mapTreeLeaves(x, map))
-	return {children: newChildren, value: tree.value}
 }
