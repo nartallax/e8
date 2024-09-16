@@ -39,6 +39,31 @@ export class E8JsonWriter extends BinformatEncoder<unknown> {
 		super(inputValue, writer)
 	}
 
+	static* getStrings(value: unknown): IterableIterator<string> {
+		if(typeof(value) === "string"){
+			if(value.length > 0){ // zero-length strings are always 1 byte anyway
+				yield value
+			}
+			return
+		}
+
+		if(typeof(value) !== "object" || value === null){
+			return
+		}
+
+		if(Array.isArray(value)){
+			for(const item of value){
+				yield* this.getStrings(item)
+			}
+			return
+		}
+
+		for(const key in value){
+			yield key
+			yield* this.getStrings((value as any)[key])
+		}
+	}
+
 	private writePossiblyBase64String(str: string): void {
 		try {
 			const decodedStr = atob(str)

@@ -5,15 +5,22 @@ export abstract class BinformatDecoder<T> extends BinformatCoderBase {
 	private result: T | null = null
 	private readonly dblBuffer = new DataView(new ArrayBuffer(8))
 	protected abstract readRootValue(): T
+	protected index = 0
 
-	constructor(protected readonly buffer: Uint8Array, protected index = 0) {
+	constructor(protected readonly buffer: Uint8Array, protected parentDecoder?: BinformatDecoder<unknown>) {
 		super()
 	}
 
 	decode(): T {
 		if(!this.hasResult){
 			this.hasResult = true
+			if(this.parentDecoder){
+				this.index = this.parentDecoder.index
+			}
 			this.result = this.readRootValue()
+			if(this.parentDecoder){
+				this.parentDecoder.index = this.index
+			}
 		}
 		return this.result!
 	}
@@ -56,6 +63,13 @@ export abstract class BinformatDecoder<T> extends BinformatCoderBase {
 			mult *= 128
 		}
 		return uint
+	}
+
+	protected readArrayElements(reader: () => void): void {
+		const len = this.readUint()
+		for(let i = 0; i < len; i++){
+			reader()
+		}
 	}
 
 	protected readArray<T>(reader: () => T): T[] {

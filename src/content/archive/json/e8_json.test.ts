@@ -1,7 +1,7 @@
 import {describe, test} from "@nartallax/clamsensor"
 import {expect} from "chai"
-import {E8JsonReader} from "content/archive/e8_json_reader"
-import {E8JsonWriter} from "content/archive/e8_json_writer"
+import {E8JsonReader} from "content/archive/json/e8_json_reader"
+import {E8JsonWriter} from "content/archive/json/e8_json_writer"
 
 describe("E8Json", () => {
 	const check = (value: unknown, map: ReadonlyMap<string, number> = new Map()) => {

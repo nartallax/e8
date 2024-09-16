@@ -1,10 +1,10 @@
 import {BinformatDecoder} from "common/binformat/binformat_decoder"
-import {E8JsonOtherTypeCode, E8JsonTypeCode, e8JsonTypeBitLength} from "content/archive/e8_json_writer"
+import {E8JsonOtherTypeCode, E8JsonTypeCode, e8JsonTypeBitLength} from "content/archive/json/e8_json_writer"
 
 export class E8JsonReader extends BinformatDecoder<unknown> {
 
-	constructor(buffer: Uint8Array, private readonly referrableStrings: readonly string[], startingIndex = 0) {
-		super(buffer, startingIndex)
+	constructor(buffer: Uint8Array, private readonly stringIndex: readonly string[], parentDecoder?: BinformatDecoder<unknown>) {
+		super(buffer, parentDecoder)
 	}
 
 	protected readRootValue(): unknown {
@@ -26,7 +26,7 @@ export class E8JsonReader extends BinformatDecoder<unknown> {
 				const decodedBitString = btoa(result)
 				return decodedBitString
 			}
-			case E8JsonTypeCode.stringIndex: return this.referrableStrings[this.readPrefixedUint(e8JsonTypeBitLength)]!
+			case E8JsonTypeCode.stringIndex: return this.stringIndex[this.readPrefixedUint(e8JsonTypeBitLength)]!
 			case E8JsonTypeCode.array: {
 				const length = this.readPrefixedUint(e8JsonTypeBitLength)
 				const result = new Array(length)

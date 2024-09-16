@@ -1,7 +1,8 @@
 import {BinformatEncoder} from "common/binformat/binformat_encoder"
-import {E8JsonWriter} from "content/archive/e8_json_writer"
+import {E8JsonWriter} from "content/archive/json/e8_json_writer"
 import {Forest, Tree, TreePath, getAllTreesByPath, getForestLeaves, getLeafByPath, isTreeBranch} from "common/tree"
 import {findSuffixes} from "content/archive/suffix_finder"
+import {E8XmlWriter} from "content/archive/xml/e8_xml_writer"
 
 export const enum E8ArchiveEntryCode {
 	// binary is any binary file. means "we don't know what it is, and not making assumptions, just storing this file as-is"
@@ -16,11 +17,11 @@ export const enum E8ArchiveEntryCode {
 	e8json = 5,
 	e8jsonSuffixed = 6,
 
-	svgStringMap = 7,
+	svgStringIndex = 7,
 	e8svg = 8,
 	e8svgSuffixed = 9,
 
-	xmlStringMap = 10,
+	xmlStringIndex = 10,
 	e8xml = 11,
 	e8xmlSuffixed = 12
 }
@@ -41,6 +42,8 @@ export class E8ArchiveWriter extends BinformatEncoder<Forest<{
 }, string>> {
 
 	private jsonStringIndex: ReadonlyMap<string, number> = new Map()
+	private xmlStringIndex: ReadonlyMap<string, number> = new Map()
+	private svgStringIndex: ReadonlyMap<string, number> = new Map()
 	private filenameSuffixIndex: ReadonlyMap<string, number> = new Map()
 	private getFileNameSuffix: (fileName: string) => string | null = () => null
 
@@ -53,6 +56,20 @@ export class E8ArchiveWriter extends BinformatEncoder<Forest<{
 			this.jsonStringIndex = this.buildJsonStringIndexMap()
 			if(this.jsonStringIndex.size > 0){
 				this.writeIndexMapEntry(this.jsonStringIndex, E8ArchiveEntryCode.jsonStringIndex)
+			}
+		}
+
+		if(this.hasAnyFileWithExtension(".xml")){
+			this.xmlStringIndex = this.buildXmlStringIndexMap(".xml")
+			if(this.xmlStringIndex.size > 0){
+				this.writeIndexMapEntry(this.xmlStringIndex, E8ArchiveEntryCode.xmlStringIndex)
+			}
+		}
+
+		if(this.hasAnyFileWithExtension(".svg")){
+			this.svgStringIndex = this.buildXmlStringIndexMap(".svg")
+			if(this.svgStringIndex.size > 0){
+				this.writeIndexMapEntry(this.svgStringIndex, E8ArchiveEntryCode.svgStringIndex)
 			}
 		}
 
@@ -91,9 +108,19 @@ export class E8ArchiveWriter extends BinformatEncoder<Forest<{
 			return
 		}
 
-		// TODO: handle SVG here
-		// right now I don't have proper big good example of svg to test on, but should be simple enough
+		if(fileName.toLowerCase().endsWith(".xml")){
+			this.writeFilename(fileName, E8ArchiveEntryCode.e8xml, E8ArchiveEntryCode.e8xmlSuffixed)
+			const xml = new TextDecoder().decode(fileContent)
+			new E8XmlWriter(xml, this.xmlStringIndex, this.writer).encodeWithoutMerging()
+			return
+		}
 
+		if(fileName.toLowerCase().endsWith(".svg")){
+			this.writeFilename(fileName, E8ArchiveEntryCode.e8svg, E8ArchiveEntryCode.e8svgSuffixed)
+			const svg = new TextDecoder().decode(fileContent)
+			new E8XmlWriter(svg, this.svgStringIndex, this.writer).encodeWithoutMerging()
+			return
+		}
 
 		this.writeFilename(fileName, E8ArchiveEntryCode.binary, E8ArchiveEntryCode.binarySuffixed)
 		this.writeByteArray(fileContent)
@@ -133,33 +160,15 @@ export class E8ArchiveWriter extends BinformatEncoder<Forest<{
 	private buildJsonStringIndexMap(): ReadonlyMap<string, number> {
 		return this.buildStringIndexMap(".json", bin => {
 			const json = JSON.parse(new TextDecoder().decode(bin))
-			return this.getJsonStrings(json)
+			return E8JsonWriter.getStrings(json)
 		}, 4)
 	}
 
-	private* getJsonStrings(value: unknown): IterableIterator<string> {
-		if(typeof(value) === "string"){
-			if(value.length > 0){ // zero-length strings are always 1 byte anyway in e8json format
-				yield value
-			}
-			return
-		}
-
-		if(typeof(value) !== "object" || value === null){
-			return
-		}
-
-		if(Array.isArray(value)){
-			for(const item of value){
-				yield* this.getJsonStrings(item)
-			}
-			return
-		}
-
-		for(const key in value){
-			yield key
-			yield* this.getJsonStrings((value as any)[key])
-		}
+	private buildXmlStringIndexMap(ext: string): ReadonlyMap<string, number> {
+		return this.buildStringIndexMap(ext, bin => {
+			const xml = new TextDecoder().decode(bin)
+			return E8XmlWriter.getStrings(xml)
+		})
 	}
 
 	private pathStringFromTreePath(treePath: TreePath): string {
