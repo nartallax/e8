@@ -1,26 +1,9 @@
 import {BinformatEncoder} from "common/binformat/binformat_encoder"
-
-export const knownCssKeywordsIndex = [
-	"fill",
-	"fill-opacity",
-	"stroke",
-	"stroke-width",
-	"stroke-linecap",
-	"stroke-linejoin",
-	"stroke-miterlimit",
-	"stroke-dasharray",
-	"stroke-opacity",
-	"butt",
-	"miter",
-	"none"
-	// feel free to add more stuff here, won't hurt
-	// but don't shuffle existing ones, index = ID
-]
-const knownCssKeywordsMap = new Map(knownCssKeywordsIndex.map((kw, index) => [kw, index]))
+import {BufferWriter} from "common/binformat/buffer_writer"
 
 export const enum CssValueType {
-	string = 0,
-	keyword = 1,
+	stringInline = 0,
+	stringReference = 1,
 	hexColor = 2,
 	// this value exists for case when we parsed css string wrong
 	// and something that we think is a "pair" is actually not, because it doesn't have colon separator
@@ -30,20 +13,49 @@ export const enum CssValueType {
 
 export const cssValueTypeBitLength = 2
 
-const hexRegexp = /^#(\d{3}|\d{6})$/
+const hexRegexp = /^#([a-f\d]{3}|[a-f\d]{6})$/i
 
 export class CssStyleWriter extends BinformatEncoder<string> {
 
-	protected writeRootValue(value: string): void {
-		const parts = value.split(/\s*;\s*/)
-		this.writeArray(parts, part => {
+	constructor(inputValue: string, protected readonly indexMap: ReadonlyMap<string, number>, writer?: BufferWriter) {
+		super(inputValue, writer)
+	}
+
+	static* getStrings(style: string): IterableIterator<string> {
+		for(const part of this.splitIntoParts(style)){
+			if(typeof(part) === "string"){
+				yield part
+			} else {
+				yield part.key
+				if(!hexRegexp.test(part.value)){
+					yield part.value
+				}
+			}
+		}
+	}
+
+	private static* splitIntoParts(style: string): IterableIterator<string | {key: string, value: string}> {
+		for(const part of style.split(/\s*;\s*/)){
 			const colonIndex = part.indexOf(":")
 			if(colonIndex < 0){
-				this.writePrefixedString(part, CssValueType.unparseablePair, cssValueTypeBitLength)
+				yield part
 			}
 
 			const key = part.substring(0, colonIndex).trim()
 			const value = part.substring(colonIndex + 1).trim()
+			yield{key, value}
+		}
+	}
+
+	protected writeRootValue(style: string): void {
+		const parts = [...CssStyleWriter.splitIntoParts(style)]
+		this.writeArray(parts, part => {
+			if(typeof(part) === "string"){
+				this.writePrefixedString(part, CssValueType.unparseablePair, cssValueTypeBitLength)
+				return
+			}
+
+			const {key, value} = part
 			this.writeCssValue(key)
 			this.writeCssValue(value)
 		})
@@ -60,17 +72,17 @@ export class CssStyleWriter extends BinformatEncoder<string> {
 			b = parseInt(digits.charAt(2), 16)
 			b = (b << 4) | b
 		} else {
-			r = parseInt(digits.slice(0, 1), 16)
-			g = parseInt(digits.slice(2, 3), 16)
-			b = parseInt(digits.slice(4, 5), 16)
+			r = parseInt(digits.slice(0, 2), 16)
+			g = parseInt(digits.slice(2, 4), 16)
+			b = parseInt(digits.slice(4, 6), 16)
 		}
-		return r | (g << 8) | (b << 16)
+		return (r << 16) | (g << 8) | (b << 0)
 	}
 
 	private writeCssValue(value: string) {
-		const kwIndex = knownCssKeywordsMap.get(value)
-		if(kwIndex !== undefined){
-			this.writePrefixedUint(kwIndex, CssValueType.keyword, cssValueTypeBitLength)
+		const index = this.indexMap.get(value)
+		if(index !== undefined){
+			this.writePrefixedUint(index, CssValueType.stringReference, cssValueTypeBitLength)
 			return
 		}
 
@@ -79,7 +91,7 @@ export class CssStyleWriter extends BinformatEncoder<string> {
 			return
 		}
 
-		this.writePrefixedString(value, CssValueType.string, cssValueTypeBitLength)
+		this.writePrefixedString(value, CssValueType.stringInline, cssValueTypeBitLength)
 	}
 
 }

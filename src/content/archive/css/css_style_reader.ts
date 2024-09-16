@@ -1,7 +1,11 @@
 import {BinformatDecoder} from "common/binformat/binformat_decoder"
-import {CssValueType, cssValueTypeBitLength, knownCssKeywordsIndex} from "content/archive/css/css_style_writer"
+import {CssValueType, cssValueTypeBitLength} from "content/archive/css/css_style_writer"
 
 export class CssStyleReader extends BinformatDecoder<string> {
+
+	constructor(buffer: Uint8Array, private readonly stringIndex: readonly string[], parentDecoder?: BinformatDecoder<unknown>) {
+		super(buffer, parentDecoder)
+	}
 
 	protected readRootValue(): string {
 		const parts = this.readArray(() => {
@@ -19,13 +23,13 @@ export class CssStyleReader extends BinformatDecoder<string> {
 
 	private readCssValue(): string {
 		const type = this.peekPrefix(cssValueTypeBitLength)
-		if(type === CssValueType.string){
+		if(type === CssValueType.stringInline){
 			return this.readPrefixedString(cssValueTypeBitLength)
 		}
 
-		if(type === CssValueType.keyword){
+		if(type === CssValueType.stringReference){
 			const index = this.readPrefixedUint(cssValueTypeBitLength)
-			return knownCssKeywordsIndex[index]!
+			return this.stringIndex[index]!
 		}
 
 		if(type === CssValueType.hexColor){
@@ -37,9 +41,9 @@ export class CssStyleReader extends BinformatDecoder<string> {
 
 	private readHexColor(): string {
 		const int = this.readPrefixedUint(cssValueTypeBitLength)
-		const r = int & 0xff
+		const r = (int >> 16) & 0xff
 		const g = (int >> 8) & 0xff
-		const b = (int >> 16) & 0xff
+		const b = (int >> 0) & 0xff
 		return `#${twoHex(r)}${twoHex(g)}${twoHex(b)}`
 	}
 

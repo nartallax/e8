@@ -36,7 +36,7 @@ export class E8SvgReader extends E8XmlReader {
 		}
 
 		if(attrName === "style"){
-			return new CssStyleReader(this.buffer, this).decode()
+			return new CssStyleReader(this.buffer, this.stringIndex, this).decode()
 		}
 
 		return super.readAttributeValue(attrName, elName)

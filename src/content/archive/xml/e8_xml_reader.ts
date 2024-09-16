@@ -4,7 +4,7 @@ import * as XmlJs from "xml-js"
 
 export class E8XmlReader extends BinformatDecoder<string> {
 
-	constructor(buffer: Uint8Array, private readonly stringIndex: readonly string[], parentDecoder?: BinformatDecoder<unknown>) {
+	constructor(buffer: Uint8Array, protected readonly stringIndex: readonly string[], parentDecoder?: BinformatDecoder<unknown>) {
 		super(buffer, parentDecoder)
 	}
 

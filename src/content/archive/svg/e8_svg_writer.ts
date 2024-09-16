@@ -17,7 +17,15 @@ export class E8SvgWriter extends E8XmlWriter {
 	}
 
 	static getStrings(value: string): IterableIterator<string> {
-		return E8XmlWriter.getStringsOfElement(this.parseSvg(value))
+		return E8XmlWriter.getStringsOfElement(this.parseSvg(value), function* (attrValue, attrName, elName) {
+			if(attrName === "style"){
+				yield* CssStyleWriter.getStrings(attrValue)
+			} else if(elName === "path" && attrName === "d"){
+				return // never index path value, it will never be used directly anyway
+			} else {
+				yield attrValue
+			}
+		})
 	}
 
 	protected writeAttributeValue(value: string, attrName: string, elName: string): void {
@@ -27,7 +35,7 @@ export class E8SvgWriter extends E8XmlWriter {
 		}
 
 		if(attrName === "style"){
-			new CssStyleWriter(value, this.writer).encodeWithoutMerging()
+			new CssStyleWriter(value, this.indexMap, this.writer).encodeWithoutMerging()
 			return
 		}
 

@@ -1,8 +1,9 @@
 import {BinformatEncoder} from "common/binformat/binformat_encoder"
-import {E8JsonWriter} from "content/archive/json/e8_json_writer"
+import {E8JsonWriter, e8JsonTypeBitLength} from "content/archive/json/e8_json_writer"
 import {Forest, Tree, TreePath, getAllTreesByPath, getForestLeaves, getLeafByPath, isTreeBranch} from "common/tree"
 import {findSuffixes} from "content/archive/suffix_finder"
-import {E8XmlWriter} from "content/archive/xml/e8_xml_writer"
+import {E8XmlWriter, e8XmlStringTypeLength} from "content/archive/xml/e8_xml_writer"
+import {E8SvgWriter} from "content/archive/svg/e8_svg_writer"
 
 export const enum E8ArchiveEntryCode {
 	// binary is any binary file. means "we don't know what it is, and not making assumptions, just storing this file as-is"
@@ -52,6 +53,17 @@ export class E8ArchiveWriter extends BinformatEncoder<Forest<{
 		this.writeByte(0xe8)
 		this.writeByte(0xa0)
 
+		this.writeIndex()
+		this.writeSuffixes()
+
+		for(const tree of this.inputValue){
+			this.writeTree(tree)
+		}
+
+		// TODO: compress it further somehow? gzip, brotli, something else? need to test on live data
+	}
+
+	private writeIndex(): void {
 		if(this.hasAnyFileWithExtension(".json")){
 			this.jsonStringIndex = this.buildJsonStringIndexMap()
 			if(this.jsonStringIndex.size > 0){
@@ -67,12 +79,14 @@ export class E8ArchiveWriter extends BinformatEncoder<Forest<{
 		}
 
 		if(this.hasAnyFileWithExtension(".svg")){
-			this.svgStringIndex = this.buildXmlStringIndexMap(".svg")
+			this.svgStringIndex = this.buildSvgStringIndexMap(".svg")
 			if(this.svgStringIndex.size > 0){
 				this.writeIndexMapEntry(this.svgStringIndex, E8ArchiveEntryCode.svgStringIndex)
 			}
 		}
+	}
 
+	private writeSuffixes(): void {
 		const allFilenames = [...getForestLeaves(this.inputValue)].map(([,leaf]) => leaf.fileName)
 		const suffixes = findSuffixes({
 			values: allFilenames,
@@ -85,12 +99,6 @@ export class E8ArchiveWriter extends BinformatEncoder<Forest<{
 			this.writeIndexArrayEntry(suffixes.suffixes, E8ArchiveEntryCode.filenameSuffixIndex)
 			this.getFileNameSuffix = str => suffixes.getSuffixOf(str)
 		}
-
-		for(const tree of this.inputValue){
-			this.writeTree(tree)
-		}
-
-		// TODO: compress it further somehow? gzip, brotli, something else? need to test on live data
 	}
 
 	private writeTree(tree: Tree<E8ArchiveFile, string>): void {
@@ -118,7 +126,7 @@ export class E8ArchiveWriter extends BinformatEncoder<Forest<{
 		if(fileName.toLowerCase().endsWith(".svg")){
 			this.writeFilename(fileName, E8ArchiveEntryCode.e8svg, E8ArchiveEntryCode.e8svgSuffixed)
 			const svg = new TextDecoder().decode(fileContent)
-			new E8XmlWriter(svg, this.svgStringIndex, this.writer).encodeWithoutMerging()
+			new E8SvgWriter(svg, this.svgStringIndex, this.writer).encodeWithoutMerging()
 			return
 		}
 
@@ -131,6 +139,7 @@ export class E8ArchiveWriter extends BinformatEncoder<Forest<{
 		if(!suffix){
 			this.writePrefixedString(name, unsuffixedType, e8ArchiveEntryTypeBitLength)
 		} else {
+			name = name.substring(0, name.length - suffix.length)
 			this.writePrefixedString(name, suffixedType, e8ArchiveEntryTypeBitLength)
 			const index = this.filenameSuffixIndex.get(suffix)!
 			this.writeUint(index)
@@ -158,16 +167,25 @@ export class E8ArchiveWriter extends BinformatEncoder<Forest<{
 	}
 
 	private buildJsonStringIndexMap(): ReadonlyMap<string, number> {
-		return this.buildStringIndexMap(".json", bin => {
+		return this.buildStringIndexMap(".json", e8JsonTypeBitLength, bin => {
 			const json = JSON.parse(new TextDecoder().decode(bin))
 			return E8JsonWriter.getStrings(json)
-		}, 4)
+		})
 	}
 
 	private buildXmlStringIndexMap(ext: string): ReadonlyMap<string, number> {
-		return this.buildStringIndexMap(ext, bin => {
+		return this.buildStringIndexMap(ext, e8XmlStringTypeLength, bin => {
 			const xml = new TextDecoder().decode(bin)
 			return E8XmlWriter.getStrings(xml)
+		})
+	}
+
+	private buildSvgStringIndexMap(ext: string): ReadonlyMap<string, number> {
+		// e8XmlStringTypeLength here is not a mistake -
+		// svg writer doesn't do anything more smart about string storage than xml writer
+		return this.buildStringIndexMap(ext, e8XmlStringTypeLength, bin => {
+			const xml = new TextDecoder().decode(bin)
+			return E8SvgWriter.getStrings(xml)
 		})
 	}
 
@@ -177,7 +195,7 @@ export class E8ArchiveWriter extends BinformatEncoder<Forest<{
 		return parts.join("/")
 	}
 
-	private buildStringIndexMap(ext: string, getStrings: (fileContent: Uint8Array) => IterableIterator<string>, typeBitOffset = 0): ReadonlyMap<string, number> {
+	private buildStringIndexMap(ext: string, typeBitOffset: number, getStrings: (fileContent: Uint8Array) => IterableIterator<string>): ReadonlyMap<string, number> {
 		const usageCountMap = this.buildUsageCountMap(ext, getStrings)
 		return this.usageCountMapToIndexMap(usageCountMap, typeBitOffset)
 	}
@@ -208,8 +226,8 @@ export class E8ArchiveWriter extends BinformatEncoder<Forest<{
 		let pairs = [...usageCountMap.entries()]
 		pairs = pairs.sort(([,a], [,b]) => b - a) // more usages go first
 		pairs = pairs.filter(([str, count], index) => {
-			const strByteLength = this.getStringByteLength(str)
-			const indexByteLength = this.getUintByteLength(index * (1 << typeBitOffset))
+			const strByteLength = this.getStringByteLength(str, typeBitOffset)
+			const indexByteLength = this.getUintByteLength(index, typeBitOffset)
 
 			// how much bytes will this string, repeated several times, occupy if index substitute happens
 			const subTotalBytes = strByteLength + (count * indexByteLength)

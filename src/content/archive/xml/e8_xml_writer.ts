@@ -19,6 +19,11 @@ export const e8XmlElementChildrenBit = 1 << 3
 export const e8XmlElementAttributesBit = 1 << 4
 export const e8XmlElementTypeLength = 5 // 2 bits for "element" costant, referrence bit, children bit, attributes bit
 
+function* dfltGetStringsOfAttributeValue(value: string, attrName: string, elName: string): IterableIterator<string> {
+	void attrName, elName // that's for overriding
+	yield value
+}
+
 export class E8XmlWriter extends BinformatEncoder<string> {
 
 	constructor(inputValue: string, protected readonly indexMap: ReadonlyMap<string, number>, writer?: BufferWriter) {
@@ -40,7 +45,7 @@ export class E8XmlWriter extends BinformatEncoder<string> {
 		return XmlJs.xml2js(xml, params) as XmlJs.Element
 	}
 
-	protected static* getStringsOfElement(value: XmlJs.Element): IterableIterator<string> {
+	protected static* getStringsOfElement(value: XmlJs.Element, getStringOfAttribute = dfltGetStringsOfAttributeValue): IterableIterator<string> {
 		if(value.type === "comment"){
 			return
 		}
@@ -61,7 +66,7 @@ export class E8XmlWriter extends BinformatEncoder<string> {
 			for(const [k, v] of Object.entries(value.attributes)){
 				yield k
 				if(typeof(v) === "string"){
-					yield v
+					yield* getStringOfAttribute(v, k, value.name ?? "")
 				}
 			}
 		}
@@ -70,14 +75,14 @@ export class E8XmlWriter extends BinformatEncoder<string> {
 			for(const [k, v] of Object.entries(value.declaration.attributes)){
 				yield k
 				if(typeof(v) === "string"){
-					yield v
+					yield* getStringOfAttribute(v, k, value.name ?? "")
 				}
 			}
 		}
 
 		if(value.elements){
 			for(const child of value.elements){
-				yield* this.getStringsOfElement(child)
+				yield* this.getStringsOfElement(child, getStringOfAttribute)
 			}
 		}
 	}

@@ -52,7 +52,8 @@ export abstract class BinformatEncoder<T> extends BinformatCoderBase {
 		} while(uint !== 0)
 	}
 
-	protected getUintByteLength(uint: number): number {
+	protected getUintByteLength(uint: number, prefixBitLength = 0): number {
+		uint *= 1 << prefixBitLength
 		let result = 0
 		do {
 			uint = Math.floor(uint / 128)
@@ -124,8 +125,8 @@ export abstract class BinformatEncoder<T> extends BinformatCoderBase {
 		}
 	}
 
-	protected getStringByteLength(str: string): number {
-		let result = this.getUintByteLength(str.length)
+	protected getStringByteLength(str: string, prefixBitLength = 0): number {
+		let result = this.getUintByteLength(str.length, prefixBitLength)
 		for(let i = 0; i < str.length; i++){
 			result += this.getUintByteLength(str.charCodeAt(i))
 		}

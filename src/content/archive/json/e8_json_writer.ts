@@ -141,9 +141,14 @@ export class E8JsonWriter extends BinformatEncoder<unknown> {
 					const entries = Object.entries(value)
 					this.writeTypedUint(entries.length, E8JsonTypeCode.mapObject)
 					for(const [k, v] of entries){
-						// chance that user will put base64 as key is minimal
-						// but will introduce performance hit if we'll try to assume it is and fail
-						this.writeNonBase64String(k)
+						const index = this.indexMap.get(k)
+						if(index === undefined){
+							// chance that user will put base64 as key is minimal
+							// but will introduce performance hit if we'll try to assume it is and fail
+							this.writeNonBase64String(k)
+						} else {
+							this.writeTypedUint(index, E8JsonTypeCode.stringIndex)
+						}
 						this.writeAnyJsonValue(v)
 					}
 				}
