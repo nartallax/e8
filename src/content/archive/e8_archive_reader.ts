@@ -4,7 +4,7 @@ import {Forest, Tree} from "common/tree"
 import {E8JsonReader} from "content/archive/json/e8_json_reader"
 import {E8XmlReader} from "content/archive/xml/e8_xml_reader"
 import {E8SvgReader} from "content/archive/svg/e8_svg_reader"
-import * as Pako from "pako"
+import {inflate} from "pako"
 
 type E8ArchiveEntryDebugInfo = {
 	code: number
@@ -12,6 +12,8 @@ type E8ArchiveEntryDebugInfo = {
 	value: unknown
 	byteLength: number
 }
+
+export const decodeE8Archive = (bytes: Uint8Array) => new E8ArchiveReader(bytes).decode()
 
 export class E8ArchiveReader extends BinformatDecoder<Forest<E8ArchiveFile, string>> {
 
@@ -21,7 +23,7 @@ export class E8ArchiveReader extends BinformatDecoder<Forest<E8ArchiveFile, stri
 	private filenameSuffixIndex: readonly string[] = []
 
 	protected decompress(bytes: Uint8Array): Uint8Array {
-		return Pako.inflate(bytes)
+		return inflate(bytes)
 	}
 
 	protected readRootValue(): Forest<E8ArchiveFile, string> {

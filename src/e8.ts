@@ -5,6 +5,9 @@ export type {XY} from "common_types"
 
 export * from "common/tree"
 
+export {decodeE8Archive} from "content/archive/e8_archive_reader"
+export {encodeE8Archive} from "content/archive/e8_archive_writer"
+
 export type {Engine} from "engine/engine"
 export {createEngineFromContentPackUrls} from "engine/loader"
 

@@ -4,7 +4,7 @@ import {Forest, Tree, TreePath, getAllTreesByPath, getForestBranches, getForestL
 import {findSuffixes} from "content/archive/suffix_finder"
 import {E8XmlWriter, e8XmlStringTypeLength} from "content/archive/xml/e8_xml_writer"
 import {E8SvgWriter} from "content/archive/svg/e8_svg_writer"
-import * as Pako from "pako"
+import {deflate} from "pako"
 
 export const enum E8ArchiveEntryCode {
 	// binary is any binary file. means "we don't know what it is, and not making assumptions, just storing this file as-is"
@@ -32,6 +32,12 @@ export const enum E8ArchiveEntryCode {
 export const e8ArchiveEntryTypeBitLength = 4
 
 export type E8ArchiveFile = {fileName: string, fileContent: Uint8Array}
+export type E8ArchiveContent = Forest<{
+	fileName: string
+	fileContent: Uint8Array
+}, string>
+
+export const encodeE8Archive = (files: E8ArchiveContent) => new E8ArchiveWriter(files).encode()
 
 /** This is definition of .e8a format, E8 archive.
 It is archive format, which means it is a file that contains multiple other files.
@@ -39,10 +45,7 @@ This format aims to compress some popular formats, like .json and .svg, better t
 But it can as well be used as general-purpose archive. At worst .e8a archive will take about as much space as .tar.gz archive would.
 
 It's not technically losless, because some unimportant details are lost (like formatting of json - it has to be reformatted after decompression, or svg attributes only used for editing and not contributing to resulting image) */
-export class E8ArchiveWriter extends BinformatEncoder<Forest<{
-	fileName: string
-	fileContent: Uint8Array
-}, string>> {
+export class E8ArchiveWriter extends BinformatEncoder<E8ArchiveContent> {
 
 	private jsonStringIndex: ReadonlyMap<string, number> = new Map()
 	private xmlStringIndex: ReadonlyMap<string, number> = new Map()
@@ -51,7 +54,7 @@ export class E8ArchiveWriter extends BinformatEncoder<Forest<{
 	private getFileNameSuffix: (fileName: string) => string | null = () => null
 
 	protected compress(bytes: Uint8Array): Uint8Array {
-		return Pako.deflate(bytes, {level: 9, memLevel: 9})
+		return deflate(bytes, {level: 9, memLevel: 9})
 	}
 
 	protected writeRootValue(): void {
