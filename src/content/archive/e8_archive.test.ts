@@ -166,7 +166,6 @@ describe("e8a format", () => {
 		]).encode()
 
 		const entries = new E8ArchiveReader(archive).getRootEntryList(value => "!" + value)
-		console.log(entries)
 		expect(entries).to.eql([
 			{
 				code: E8ArchiveEntryCode.jsonStringIndex,
@@ -199,7 +198,6 @@ describe("e8a format", () => {
 				byteLength: 96
 			}
 		])
-
 
 		const dec = new E8ArchiveReader(archive).decode()
 		expect(dec).to.eql([

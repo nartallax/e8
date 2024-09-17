@@ -17,7 +17,7 @@ export abstract class BinformatEncoder<T> extends BinformatCoderBase {
 
 	encode(): Uint8Array {
 		this.encodeWithoutMerging()
-		return this.writer.toArray()
+		return this.compress(this.writer.toArray())
 	}
 
 	encodeWithoutMerging(): void {
@@ -25,6 +25,10 @@ export abstract class BinformatEncoder<T> extends BinformatCoderBase {
 			this.writeRootValue(this.inputValue)
 			this.didWrite = true
 		}
+	}
+
+	protected compress(bytes: Uint8Array): Uint8Array {
+		return bytes // nothing by default, up to subclasses to override
 	}
 
 	protected writePrefixedByte(byte: number, prefix: number, prefixBitLength: number): void {

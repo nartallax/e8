@@ -6,9 +6,19 @@ export abstract class BinformatDecoder<T> extends BinformatCoderBase {
 	private readonly dblBuffer = new DataView(new ArrayBuffer(8))
 	protected abstract readRootValue(): T
 	protected index = 0
+	protected readonly buffer: Uint8Array
 
-	constructor(protected readonly buffer: Uint8Array, protected parentDecoder?: BinformatDecoder<unknown>) {
+	constructor(buffer: Uint8Array, protected parentDecoder?: BinformatDecoder<unknown>) {
 		super()
+		if(parentDecoder){
+			if(this.decompress !== BinformatDecoder.prototype.decompress){
+				// it's possible in general, but more complicated and I don't need it, so whatever
+				throw new Error("It's impossible at the moment to use compression if decoder has a parent decoder")
+			}
+			this.buffer = buffer
+		} else {
+			this.buffer = this.decompress(buffer)
+		}
 	}
 
 	decode(): T {
@@ -23,6 +33,10 @@ export abstract class BinformatDecoder<T> extends BinformatCoderBase {
 			}
 		}
 		return this.result!
+	}
+
+	protected decompress(bytes: Uint8Array): Uint8Array {
+		return bytes // nothing by default, up to subclasses to override
 	}
 
 	protected readInt(): number {

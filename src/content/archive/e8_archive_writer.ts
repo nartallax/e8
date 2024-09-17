@@ -4,6 +4,7 @@ import {Forest, Tree, TreePath, getAllTreesByPath, getForestBranches, getForestL
 import {findSuffixes} from "content/archive/suffix_finder"
 import {E8XmlWriter, e8XmlStringTypeLength} from "content/archive/xml/e8_xml_writer"
 import {E8SvgWriter} from "content/archive/svg/e8_svg_writer"
+import * as Pako from "pako"
 
 export const enum E8ArchiveEntryCode {
 	// binary is any binary file. means "we don't know what it is, and not making assumptions, just storing this file as-is"
@@ -49,6 +50,10 @@ export class E8ArchiveWriter extends BinformatEncoder<Forest<{
 	private filenameSuffixIndex: ReadonlyMap<string, number> = new Map()
 	private getFileNameSuffix: (fileName: string) => string | null = () => null
 
+	protected compress(bytes: Uint8Array): Uint8Array {
+		return Pako.deflate(bytes, {level: 9, memLevel: 9})
+	}
+
 	protected writeRootValue(): void {
 		// magic bytes
 		this.writeByte(0xe8)
@@ -60,8 +65,6 @@ export class E8ArchiveWriter extends BinformatEncoder<Forest<{
 		for(const tree of this.inputValue){
 			this.writeTree(tree)
 		}
-
-		// TODO: compress it further somehow? gzip, brotli, something else? need to test on live data
 	}
 
 	private writeIndex(): void {
