@@ -128,7 +128,8 @@ export class E8ArchiveReader extends BinformatDecoder<Forest<E8ArchiveFile, stri
 				}
 			}
 
-			case E8ArchiveEntryCode.directory: {
+			case E8ArchiveEntryCode.directory:
+			case E8ArchiveEntryCode.directorySuffixed: {
 				const children = this.readArray(() => {
 					const entry = this.readEntry().tree
 					if(!entry){
@@ -138,7 +139,7 @@ export class E8ArchiveReader extends BinformatDecoder<Forest<E8ArchiveFile, stri
 				})
 				return {
 					tree: {value: fileName, children},
-					entryValue: fileName
+					entryValue: null
 				}
 			}
 
@@ -152,7 +153,8 @@ export class E8ArchiveReader extends BinformatDecoder<Forest<E8ArchiveFile, stri
 		if(entryCode === E8ArchiveEntryCode.binarySuffixed
 		|| entryCode === E8ArchiveEntryCode.e8jsonSuffixed
 		|| entryCode === E8ArchiveEntryCode.e8svgSuffixed
-		|| entryCode === E8ArchiveEntryCode.e8xmlSuffixed){
+		|| entryCode === E8ArchiveEntryCode.e8xmlSuffixed
+		|| entryCode === E8ArchiveEntryCode.directorySuffixed){
 			const index = this.readUint()
 			name += this.filenameSuffixIndex[index]
 		}

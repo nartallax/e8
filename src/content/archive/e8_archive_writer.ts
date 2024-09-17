@@ -1,6 +1,6 @@
 import {BinformatEncoder} from "common/binformat/binformat_encoder"
 import {E8JsonWriter, e8JsonTypeBitLength} from "content/archive/json/e8_json_writer"
-import {Forest, Tree, TreePath, getAllTreesByPath, getForestLeaves, getLeafByPath, isTreeBranch} from "common/tree"
+import {Forest, Tree, TreePath, getAllTreesByPath, getForestBranches, getForestLeaves, getLeafByPath, isTreeBranch} from "common/tree"
 import {findSuffixes} from "content/archive/suffix_finder"
 import {E8XmlWriter, e8XmlStringTypeLength} from "content/archive/xml/e8_xml_writer"
 import {E8SvgWriter} from "content/archive/svg/e8_svg_writer"
@@ -12,6 +12,7 @@ export const enum E8ArchiveEntryCode {
 	// suffixed files have a uint after their filename, referring to suffix in suffix array
 	binarySuffixed = 1,
 	directory = 2,
+	directorySuffixed = 13,
 	filenameSuffixIndex = 3,
 
 	jsonStringIndex = 4,
@@ -87,7 +88,10 @@ export class E8ArchiveWriter extends BinformatEncoder<Forest<{
 	}
 
 	private writeSuffixes(): void {
-		const allFilenames = [...getForestLeaves(this.inputValue)].map(([,leaf]) => leaf.fileName)
+		const allFilenames = [
+			...[...getForestLeaves(this.inputValue)].map(([,leaf]) => leaf.fileName),
+			...[...getForestBranches(this.inputValue)].map(([,dirName]) => dirName)
+		]
 		const suffixes = findSuffixes({
 			values: allFilenames,
 			getRefWriteCost: () => 2,
@@ -103,7 +107,7 @@ export class E8ArchiveWriter extends BinformatEncoder<Forest<{
 
 	private writeTree(tree: Tree<E8ArchiveFile, string>): void {
 		if(isTreeBranch(tree)){
-			this.writePrefixedString(tree.value, E8ArchiveEntryCode.directory, e8ArchiveEntryTypeBitLength)
+			this.writeFilename(tree.value, E8ArchiveEntryCode.directory, E8ArchiveEntryCode.directorySuffixed)
 			this.writeArray(tree.children, tree => this.writeTree(tree))
 			return
 		}

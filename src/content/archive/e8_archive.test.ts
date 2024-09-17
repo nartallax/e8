@@ -5,7 +5,9 @@ import {E8ArchiveEntryCode, E8ArchiveWriter} from "content/archive/e8_archive_wr
 
 describe("e8a format", () => {
 	const toBytes = (str: string) => new TextEncoder().encode(str)
-	const toJson = (bytes: Uint8Array) => JSON.parse(new TextDecoder().decode(bytes))
+	const toString = (bytes: Uint8Array) => new TextDecoder().decode(bytes)
+	const toJson = (bytes: Uint8Array) => JSON.parse(toString(bytes))
+	const reformatJson = (bytes: Uint8Array) => toBytes(JSON.stringify(toJson(bytes), null, 2))
 
 	const jsonA = toBytes(JSON.stringify({name: "dog", skin: "hairy", age: 10}))
 	const jsonB = toBytes(JSON.stringify({name: "sphinx", skin: "smooth", age: 3}))
@@ -13,7 +15,7 @@ describe("e8a format", () => {
 
 	const svgString = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg width="64" height="64" viewBox="-0.5 -0.5 1 1" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
-  <path d="m -0.5 1.5 V 0 Z" style="fill:#03b3b3;fill-opacity:1" />
+  <path d="m -0.5 1.5 V 0 Z" style="fill: #03b3b3; fill-opacity: 1"/>
 </svg>`
 	const svgBytes = toBytes(svgString)
 
@@ -74,11 +76,13 @@ describe("e8a format", () => {
 	})
 
 	test("is able to compress SVG files", () => {
-		const archive = new E8ArchiveWriter([
+		const input = [
 			{value: {fileName: "img_a.texture.svg", fileContent: svgBytes}},
 			{value: {fileName: "img_b.texture.svg", fileContent: svgBytes}},
 			{value: {fileName: "img_c.texture.svg", fileContent: svgBytes}}
-		]).encode()
+		]
+
+		const archive = new E8ArchiveWriter(input).encode()
 
 		const entryList = new E8ArchiveReader(archive)
 			.getRootEntryList(value =>
@@ -141,6 +145,73 @@ describe("e8a format", () => {
 				name: "img_c!.texture.svg",
 				byteLength: 50
 			}
+		])
+
+
+		const dec = new E8ArchiveReader(archive).decode()
+		expect(dec).to.eql(input)
+	})
+
+	test("directories", () => {
+		const archive = new E8ArchiveWriter([
+			{value: "emptydir", children: []},
+			{value: "emptydir_suffffffffix", children: []},
+			{value: "models_suffffffffix", children: [
+				{value: "creatures", children: [
+					{value: {fileName: "dog.json", fileContent: jsonA}},
+					{value: {fileName: "notDog.json", fileContent: jsonB}},
+					{value: {fileName: "totallyNotDog.json", fileContent: jsonC}}
+				]}
+			]}
+		]).encode()
+
+		const entries = new E8ArchiveReader(archive).getRootEntryList(value => "!" + value)
+		console.log(entries)
+		expect(entries).to.eql([
+			{
+				code: E8ArchiveEntryCode.jsonStringIndex,
+				value: ["!name", "!skin", "!age"],
+				name: undefined,
+				byteLength: 16
+			},
+			{
+				code: E8ArchiveEntryCode.filenameSuffixIndex,
+				value: ["!og.json", "!_suffffffffix"],
+				name: undefined,
+				byteLength: 24
+			},
+			{
+				code: E8ArchiveEntryCode.directory,
+				value: null,
+				name: "emptydir",
+				byteLength: 11
+			},
+			{
+				code: E8ArchiveEntryCode.directorySuffixed,
+				value: null,
+				name: "emptydir!_suffffffffix",
+				byteLength: 12
+			},
+			{
+				code: E8ArchiveEntryCode.directorySuffixed,
+				value: null,
+				name: "models!_suffffffffix",
+				byteLength: 96
+			}
+		])
+
+
+		const dec = new E8ArchiveReader(archive).decode()
+		expect(dec).to.eql([
+			{value: "emptydir", children: []},
+			{value: "emptydir_suffffffffix", children: []},
+			{value: "models_suffffffffix", children: [
+				{value: "creatures", children: [
+					{value: {fileName: "dog.json", fileContent: reformatJson(jsonA)}},
+					{value: {fileName: "notDog.json", fileContent: reformatJson(jsonB)}},
+					{value: {fileName: "totallyNotDog.json", fileContent: reformatJson(jsonC)}}
+				]}
+			]}
 		])
 	})
 })

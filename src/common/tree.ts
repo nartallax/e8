@@ -18,7 +18,11 @@ export const isTreeBranch = <T, B>(x: Tree<T, B>): x is TreeBranch<T, B> => {
 }
 
 export const getForestLeaves = <T, B>(forest: Forest<T, B>): IterableIterator<[TreePath, T]> => {
-	return getForestLeavesInternal(forest, [])
+	return getForestValuesInternal<T, B, T>(forest, [], (tree): tree is TreeLeaf<T> => !isTreeBranch(tree))
+}
+
+export const getForestBranches = <T, B>(forest: Forest<T, B>): IterableIterator<[TreePath, B]> => {
+	return getForestValuesInternal<T, B, B>(forest, [], isTreeBranch)
 }
 
 export const getLeafByPath = <T, B>(forest: Forest<T, B>, path: TreePath): T => {
@@ -68,15 +72,16 @@ export const getTreeByPath = <T, B>(forest: Forest<T, B>, path: TreePath): Tree<
 	throw new Error("Path does not point to tree node.")
 }
 
-function* getForestLeavesInternal<T, B>(forest: Forest<T, B>, path: TreePath): IterableIterator<[TreePath, T]> {
+function* getForestValuesInternal<T, B, R extends T | B>(forest: Forest<T, B>, path: TreePath, isThisIt: (x: Tree<T, B>) => x is Tree<T, B> & {value: R}): IterableIterator<[TreePath, R]> {
 	let i = -1
 	for(const tree of forest){
 		i++
 		const itemPath = [...path, i]
-		if(isTreeBranch(tree)){
-			yield* getForestLeavesInternal(tree.children, itemPath)
-		} else {
+		if(isThisIt(tree)){
 			yield[itemPath, tree.value]
+		}
+		if(isTreeBranch(tree)){
+			yield* getForestValuesInternal(tree.children, itemPath, isThisIt)
 		}
 	}
 }
