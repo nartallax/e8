@@ -3,8 +3,6 @@ export {knownMouseButtonInputs, knownKeyboardInputs, knownMouseWheelInputs} from
 
 export type {XY} from "common_types"
 
-export * from "common/tree"
-
 export {decodeE8Archive} from "content/archive/e8_archive_reader"
 export {encodeE8Archive} from "content/archive/e8_archive_writer"
 

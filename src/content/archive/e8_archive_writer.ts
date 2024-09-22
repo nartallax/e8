@@ -1,10 +1,10 @@
 import {BinformatEncoder} from "common/binformat/binformat_encoder"
 import {E8JsonWriter, e8JsonTypeBitLength} from "content/archive/json/e8_json_writer"
-import {Forest, Tree, TreePath, getAllTreesByPath, getForestBranches, getForestLeaves, getLeafByPath, isTreeBranch} from "common/tree"
 import {findSuffixes} from "content/archive/suffix_finder"
 import {E8XmlWriter, e8XmlStringTypeLength} from "content/archive/xml/e8_xml_writer"
 import {E8SvgWriter} from "content/archive/svg/e8_svg_writer"
 import {deflate} from "pako"
+import {Forest, ForestPath, Tree, isTreeBranch} from "@nartallax/forest"
 
 export const enum E8ArchiveEntryCode {
 	// binary is any binary file. means "we don't know what it is, and not making assumptions, just storing this file as-is"
@@ -32,10 +32,7 @@ export const enum E8ArchiveEntryCode {
 export const e8ArchiveEntryTypeBitLength = 4
 
 export type E8ArchiveFile = {fileName: string, fileContent: Uint8Array}
-export type E8ArchiveContent = Forest<{
-	fileName: string
-	fileContent: Uint8Array
-}, string>
+export type E8ArchiveContent = readonly Tree<E8ArchiveFile, string>[]
 
 export const encodeE8Archive = (files: E8ArchiveContent) => new E8ArchiveWriter(files).encode()
 
@@ -52,6 +49,13 @@ export class E8ArchiveWriter extends BinformatEncoder<E8ArchiveContent> {
 	private svgStringIndex: ReadonlyMap<string, number> = new Map()
 	private filenameSuffixIndex: ReadonlyMap<string, number> = new Map()
 	private getFileNameSuffix: (fileName: string) => string | null = () => null
+
+	private readonly forest: Forest<E8ArchiveFile, string>
+
+	constructor(inputValue: E8ArchiveContent) {
+		super(inputValue)
+		this.forest = new Forest(inputValue)
+	}
 
 	protected compress(bytes: Uint8Array): Uint8Array {
 		return deflate(bytes, {level: 9, memLevel: 9})
@@ -95,8 +99,8 @@ export class E8ArchiveWriter extends BinformatEncoder<E8ArchiveContent> {
 
 	private writeSuffixes(): void {
 		const allFilenames = [
-			...[...getForestLeaves(this.inputValue)].map(([,leaf]) => leaf.fileName),
-			...[...getForestBranches(this.inputValue)].map(([,dirName]) => dirName)
+			...[...this.forest.getLeaves()].map((file => file.fileName)),
+			...this.forest.getBranches()
 		]
 		const suffixes = findSuffixes({
 			values: allFilenames,
@@ -168,7 +172,7 @@ export class E8ArchiveWriter extends BinformatEncoder<E8ArchiveContent> {
 
 	private hasAnyFileWithExtension(ext: string): boolean {
 		ext = ext.toLowerCase()
-		for(const [,{fileName}] of getForestLeaves(this.inputValue)){
+		for(const {fileName} of this.forest.getLeaves()){
 			if(fileName.toLowerCase().endsWith(ext)){
 				return true
 			}
@@ -199,8 +203,8 @@ export class E8ArchiveWriter extends BinformatEncoder<E8ArchiveContent> {
 		})
 	}
 
-	private pathStringFromTreePath(treePath: TreePath): string {
-		const trees = getAllTreesByPath(this.inputValue, treePath)
+	private pathStringFromTreePath(path: ForestPath): string {
+		const trees = this.forest.pathToTrees(path)
 		const parts = trees.map(tree => isTreeBranch(tree) ? tree.value : tree.value.fileName)
 		return parts.join("/")
 	}
@@ -213,19 +217,19 @@ export class E8ArchiveWriter extends BinformatEncoder<E8ArchiveContent> {
 	private buildUsageCountMap(ext: string, getKeys: (fileContent: Uint8Array) => IterableIterator<string>): ReadonlyMap<string, number> {
 		ext = ext.toLowerCase()
 		const usageCountMap = new Map<string, number>()
-		for(const [treePath, value] of getForestLeaves(this.inputValue)){
+		for(const [value, path] of this.forest.getLeavesWithPaths()){
 			if(!value.fileName.toLowerCase().endsWith(ext)){
 				continue
 			}
 
-			const fileContent = getLeafByPath(this.inputValue, treePath).fileContent
+			const fileContent = this.forest.getLeafAt(path).fileContent
 
 			try {
 				for(const key of getKeys(fileContent)){
 					usageCountMap.set(key, (usageCountMap.get(key) ?? 0) + 1)
 				}
 			} catch(e){
-				throw new Error(`Failed to process file at ${this.pathStringFromTreePath(treePath)}: ${e}`)
+				throw new Error(`Failed to process file at ${this.pathStringFromTreePath(path)}: ${e}`)
 			}
 		}
 
