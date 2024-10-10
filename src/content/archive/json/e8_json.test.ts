@@ -36,7 +36,8 @@ describe("E8Json", () => {
 		check("uwu")
 
 		expect(new E8JsonWriter("", new Map()).encode().length).to.eql(1)
-		expect(new E8JsonWriter("owo", new Map()).encode().length).to.eql(4)
+		// first byte: 3 bits for type, 2 bits for padding length, 3 bits for length of 2 bytes of base64
+		expect(new E8JsonWriter("owo", new Map()).encode().length).to.eql(3)
 	})
 
 	test("booleans and null", () => {
@@ -53,7 +54,7 @@ describe("E8Json", () => {
 		const content = "nya!"
 		const b64 = btoa(content)
 		const encoded = new E8JsonWriter(b64, new Map()).encode()
-		expect(encoded.length).to.eql(content.length + 1) // 1 for type+length
+		expect(encoded.length).to.eql(content.length + 2) // 1 for type+paddinglength+length
 		const decoded = new E8JsonReader(encoded, []).decode()
 		expect(atob(decoded as string)).to.eql(content)
 	})
@@ -87,6 +88,6 @@ describe("E8Json", () => {
 		check(json, indexMap)
 
 		const enc = new E8JsonWriter(json, indexMap).encode()
-		expect(enc.length).to.eql(83)
+		expect(enc.length).to.eql(81)
 	})
 })

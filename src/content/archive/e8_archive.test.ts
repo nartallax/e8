@@ -45,7 +45,7 @@ describe("e8a format", () => {
 				code: E8ArchiveEntryCode.e8jsonSuffixed,
 				value: {"!name": "dog", "!skin": "hairy", "!age": 10},
 				name: "json_a!.creature.json",
-				byteLength: 23
+				byteLength: 22
 			},
 			{
 				code: E8ArchiveEntryCode.e8jsonSuffixed,
@@ -195,7 +195,7 @@ describe("e8a format", () => {
 				code: E8ArchiveEntryCode.directorySuffixed,
 				value: null,
 				name: "models!_suffffffffix",
-				byteLength: 96
+				byteLength: 95
 			}
 		])
 

@@ -1,5 +1,5 @@
 import {BinformatDecoder} from "common/binformat/binformat_decoder"
-import {E8JsonOtherTypeCode, E8JsonTypeCode, e8JsonTypeBitLength} from "content/archive/json/e8_json_writer"
+import {E8JsonOtherTypeCode, E8JsonTypeCode, e8JsonBase64StringTypeBitLength, e8JsonTypeBitLength} from "content/archive/json/e8_json_writer"
 
 export class E8JsonReader extends BinformatDecoder<unknown> {
 
@@ -11,21 +11,26 @@ export class E8JsonReader extends BinformatDecoder<unknown> {
 		return this.readAnyJsonValue()
 	}
 
+	private readJsonBase64String(): string {
+		const prefix = this.peekPrefix(e8JsonBase64StringTypeBitLength)
+		const paddingLength = prefix >> e8JsonTypeBitLength
+		const bytes = this.readPrefixedByteArray(e8JsonBase64StringTypeBitLength)
+		let result = ""
+		for(let i = 0; i < bytes.length; i++){
+			result += String.fromCharCode(bytes[i]!)
+		}
+		let decodedBitString = btoa(result)
+		decodedBitString = decodedBitString.substring(0, decodedBitString.length - paddingLength)
+		return decodedBitString
+	}
+
 	protected readAnyJsonValue(): unknown {
 		const typeCode = this.peekPrefix(e8JsonTypeBitLength)
 		switch(typeCode){
 			case E8JsonTypeCode.posInt: return this.readPrefixedUint(e8JsonTypeBitLength)
 			case E8JsonTypeCode.negInt: return -this.readPrefixedUint(e8JsonTypeBitLength)
 			case E8JsonTypeCode.string: return this.readPrefixedString(e8JsonTypeBitLength)
-			case E8JsonTypeCode.stringBase64: {
-				const bytes = this.readPrefixedByteArray(e8JsonTypeBitLength)
-				let result = ""
-				for(let i = 0; i < bytes.length; i++){
-					result += String.fromCharCode(bytes[i]!)
-				}
-				const decodedBitString = btoa(result)
-				return decodedBitString
-			}
+			case E8JsonTypeCode.stringBase64: return this.readJsonBase64String()
 			case E8JsonTypeCode.stringIndex: return this.stringIndex[this.readPrefixedUint(e8JsonTypeBitLength)]!
 			case E8JsonTypeCode.array: {
 				const length = this.readPrefixedUint(e8JsonTypeBitLength)

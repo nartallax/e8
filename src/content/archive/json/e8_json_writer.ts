@@ -2,6 +2,7 @@ import {BinformatEncoder} from "common/binformat/binformat_encoder"
 import {BufferWriter} from "common/binformat/buffer_writer"
 
 export const e8JsonTypeBitLength = 3
+export const e8JsonBase64StringTypeBitLength = e8JsonTypeBitLength + 2
 
 export const enum E8JsonTypeCode {
 	string = 0,
@@ -64,20 +65,57 @@ export class E8JsonWriter extends BinformatEncoder<unknown> {
 		}
 	}
 
+	private writeJsonBase64String(str: string): boolean {
+		let paddings = ""
+
+		for(; paddings.length <= 2; paddings += "="){
+			const paddedStr = str + paddings
+			let decodedStr
+			try {
+				decodedStr = atob(paddedStr)
+			} catch(e){
+				continue
+			}
+			if(btoa(decodedStr) === paddedStr){
+				break
+			}
+		}
+
+		if(paddings.length > 2){
+			return false
+		}
+
+		const decodedStr = atob(str + paddings)
+		const bytes = new Uint8Array(decodedStr.length)
+		for(let i = 0; i < decodedStr.length; i++){
+			bytes[i] = decodedStr.charCodeAt(i)
+		}
+		this.writePrefixedByteArray(
+			bytes,
+			E8JsonTypeCode.stringBase64 | (paddings.length << e8JsonTypeBitLength),
+			e8JsonBase64StringTypeBitLength
+		)
+
+		return true
+	}
+
 	private writePossiblyBase64String(str: string): void {
-		try {
-			const decodedStr = atob(str)
-			if(btoa(decodedStr) !== str){
-				this.writeNonBase64String(str)
-				return
-			}
-			const bytes = new Uint8Array(decodedStr.length)
-			for(let i = 0; i < decodedStr.length; i++){
-				bytes[i] = decodedStr.charCodeAt(i)
-			}
-			this.writePrefixedByteArray(bytes, E8JsonTypeCode.stringBase64, e8JsonTypeBitLength)
-		} catch(e){
+		if(!this.writeJsonBase64String(str)){
 			this.writeNonBase64String(str)
+		}
+	}
+
+	private writeJsonString(value: string): void {
+		if(value.length === 0){
+			// empty string is always just 1 byte, no need to optimize further
+			this.writePrefixedString("", E8JsonTypeCode.string, e8JsonTypeBitLength)
+			return
+		}
+		const index = this.indexMap.get(value)
+		if(index === undefined){
+			this.writePossiblyBase64String(value)
+		} else {
+			this.writeTypedUint(index, E8JsonTypeCode.stringIndex)
 		}
 	}
 
@@ -116,17 +154,7 @@ export class E8JsonWriter extends BinformatEncoder<unknown> {
 			} return
 
 			case "string": {
-				if(value.length === 0){
-					// empty string is always just 1 byte, no need to optimize further
-					this.writePrefixedString("", E8JsonTypeCode.string, e8JsonTypeBitLength)
-					return
-				}
-				const index = this.indexMap.get(value)
-				if(index === undefined){
-					this.writePossiblyBase64String(value)
-				} else {
-					this.writeTypedUint(index, E8JsonTypeCode.stringIndex)
-				}
+				this.writeJsonString(value)
 			} return
 
 			case "object": {
@@ -141,14 +169,7 @@ export class E8JsonWriter extends BinformatEncoder<unknown> {
 					const entries = Object.entries(value)
 					this.writeTypedUint(entries.length, E8JsonTypeCode.mapObject)
 					for(const [k, v] of entries){
-						const index = this.indexMap.get(k)
-						if(index === undefined){
-							// chance that user will put base64 as key is minimal
-							// but will introduce performance hit if we'll try to assume it is and fail
-							this.writeNonBase64String(k)
-						} else {
-							this.writeTypedUint(index, E8JsonTypeCode.stringIndex)
-						}
+						this.writeJsonString(k)
 						this.writeAnyJsonValue(v)
 					}
 				}
