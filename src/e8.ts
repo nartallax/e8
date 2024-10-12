@@ -15,3 +15,4 @@ export {defineEntity, makeEntityBase} from "entities/define_entity"
 
 export type * from "content/content_pack"
 export type * from "content/content"
+export {contentPackFileExtensions, contentPackFixedPaths} from "content/content_pack_reader"

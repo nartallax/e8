@@ -80,7 +80,7 @@ const getParticles = (packs: ContentPack[], textures: Map<string, AtlasPart>): M
 			path,
 			{
 				...omit(rawParticle, "graphics"),
-				graphics: {
+				graphics: !rawParticle.graphics ? null : {
 					layerIndex: getLayerIndex(rawParticle.graphics.layerPath),
 					...getAtlasPart(rawParticle.graphics.texturePath)
 				}

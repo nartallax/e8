@@ -103,5 +103,5 @@ export type ContentPackDescription = {
 }
 
 export type ContentPackParticle = Omit<ParticleDefinition, "graphics"> & {
-	graphics: ContentPackGraphics
+	graphics?: ContentPackGraphics
 }

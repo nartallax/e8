@@ -211,7 +211,11 @@ export class GraphicEngine {
 	}
 
 	emitParticles(def: ParticleDefinition, position: XY, direction: number): void {
-		const layer = this.layers[def.graphics.layerIndex] as GraphicLayer<ParticleShader>
+		const graphics = def.graphics
+		if(!graphics){
+			return
+		}
+		const layer = this.layers[graphics.layerIndex] as GraphicLayer<ParticleShader>
 		const currentTime = this.getCurrentTime()
 		for(let i = 0; i < def.amount; i++){
 			const thisParticleDirection = direction + (def.angle * (Math.random() - 0.5))
@@ -232,7 +236,7 @@ export class GraphicEngine {
 			)
 			instance.setParticleColor(def.color.start, def.color.end)
 			instance.setParticleTime(currentTime, lifetime)
-			instance.setTexturePosition(def.graphics.atlasPosition.x, def.graphics.atlasPosition.y, def.graphics.size.x, def.graphics.size.y)
+			instance.setTexturePosition(graphics.atlasPosition.x, graphics.atlasPosition.y, graphics.size.x, graphics.size.y)
 		}
 	}
 

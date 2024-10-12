@@ -3,7 +3,10 @@ import {setClassName} from "common/set_class_name"
 import {ModuleRunner} from "content/module_runner"
 import {ContentPack} from "e8"
 import {EntityClass, collectEntitiesDuringDefining, defineEntity} from "entities/define_entity"
-import semverSatisfies from "semver/functions/satisfies"
+// import semverSatisfies from "semver/functions/satisfies"
+// TODO: only import semverSatisfies, as in the line above
+// right now this import is somehow broken
+import * as Semver from "semver"
 
 export const runCodeOfContentPacks = async(packs: ContentPack[]): Promise<Map<string, EntityClass>[]> => {
 	checkDependenciesSatisfied(packs)
@@ -97,7 +100,7 @@ const checkDependenciesSatisfied = (packs: ContentPack[]) => {
 	for(const pack of packs){
 		for(const [depName, depVersionExpr] of Object.entries(pack.description.dependencies ?? {})){
 			const existingVersion = allKnownPackages.get(depName)
-			if(!existingVersion || !semverSatisfies(existingVersion, depVersionExpr)){
+			if(!existingVersion || !Semver.satisfies(existingVersion, depVersionExpr)){
 				unsatisfiedDependencies.push({name: depName, from: {name: pack.description.identifier, expectedVersion: depVersionExpr}})
 			}
 		}

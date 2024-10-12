@@ -41,7 +41,7 @@ export type ParticleDefinition = {
 	lifetime: DeviatingValueRange
 	// TODO: deviation type, linear/normal/etc
 	angle: number // it's deviation too, but average is decided in runtime
-	graphics: AtlasPartWithLayer
+	graphics: AtlasPartWithLayer | null
 }
 
 export type LayerType = "particle" | "model"
