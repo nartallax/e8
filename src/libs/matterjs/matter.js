@@ -30,17 +30,7 @@ original license below
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-(function webpackUniversalModuleDefinition(root, factory) {
-	if(typeof exports === "object" && typeof module === "object"){
-		module.exports = factory()
-	} else if(typeof define === "function" && define.amd){
-		define("Matter", [], factory)
-	} else if(typeof exports === "object"){
-		exports["Matter"] = factory()
-	} else {
-		root["Matter"] = factory()
-	}
-})(this, function() {
+let factory = function() {
 	return /** ****/ (function(modules) { // webpackBootstrap
 		/** ****/ 	// The module cache
 		/** ****/ 	var installedModules = {}
@@ -10994,4 +10984,43 @@ original license below
 
 			/***/ })
 		/** ****/ ])
-})
+}
+
+// just to make this, technically, a module
+const Matter = factory()
+export const name = Matter.name
+export const version = Matter.version
+export const uses = Matter.uses
+export const used = Matter.used
+export const use = Matter.use
+export const before = Matter.before
+export const after = Matter.after
+export const Axes = Matter.Axes
+export const Bodies = Matter.Bodies
+export const Body = Matter.Body
+export const Bounds = Matter.Bounds
+export const Collision = Matter.Collision
+export const Common = Matter.Common
+export const Composite = Matter.Composite
+export const Composites = Matter.Composites
+export const Constraint = Matter.Constraint
+export const Contact = Matter.Contact
+export const Detector = Matter.Detector
+export const Engine = Matter.Engine
+export const Events = Matter.Events
+export const Grid = Matter.Grid
+export const Mouse = Matter.Mouse
+export const MouseConstraint = Matter.MouseConstraint
+export const Pair = Matter.Pair
+export const Pairs = Matter.Pairs
+export const Plugin = Matter.Plugin
+export const Query = Matter.Query
+export const Render = Matter.Render
+export const Resolver = Matter.Resolver
+export const Runner = Matter.Runner
+export const SAT = Matter.SAT
+export const Sleeping = Matter.Sleeping
+export const Svg = Matter.Svg
+export const Vector = Matter.Vector
+export const Vertices = Matter.Vertices
+export const World = Matter.World

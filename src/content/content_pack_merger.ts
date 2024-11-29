@@ -142,8 +142,8 @@ const getCollisionGroupMasks = (packs: ContentPack[], getCollisionGroupIndex: (p
 		const a = getCollisionGroupIndex(aPath)
 		for(const bPath of aGroup.collidesWithGroupPaths){
 			const b = getCollisionGroupIndex(bPath)
-			masks[a] |= 1 << b
-			masks[b] |= 1 << a
+			masks[a]! |= 1 << b
+			masks[b]! |= 1 << a
 		}
 	}
 	return masks
