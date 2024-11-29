@@ -23,7 +23,7 @@ export class E8SvgReader extends E8XmlReader {
 	private addDefaultNamespaceUrls(svgRoot: XmlJs.Element) {
 		const attrs = svgRoot.attributes ??= {}
 		if(!("xmlns" in attrs)){
-			attrs["xmlns"] = defaultSvgXmlns
+			attrs.xmlns = defaultSvgXmlns
 		}
 		if(!("xmlns:svg" in attrs)){
 			attrs["xmlns:svg"] = defaultSvgXmlns

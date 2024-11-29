@@ -13,7 +13,7 @@ export type Entity = {
 	remove(): void
 	move(coords: XY, rotation: number): void
 	// TODO: vectors here
-	applyForce(xForce: number, yForce: number, xOffset?: number, yOffset?: number): void
+	applyForce(force: XY, offset?: XY): void
 	handleCollision(otherEntity: Entity): void
 }
 
@@ -59,8 +59,8 @@ export class EntityImpl implements Entity {
 		engine.physics.moveEntity(this, coords, rotation)
 	}
 
-	applyForce(xForce: number, yForce: number, xOffset = 0, yOffset = 0): void {
-		engine.physics.applyForceToEntity(this, xForce, yForce, xOffset, yOffset)
+	applyForce(force: XY, offset: XY = zeroXY): void {
+		engine.physics.applyForceToEntity(this, force, offset)
 	}
 
 	handleCollision(otherEntity: EntityImpl): void {
@@ -68,3 +68,5 @@ export class EntityImpl implements Entity {
 		void otherEntity
 	}
 }
+
+const zeroXY = {x: 0, y: 0}

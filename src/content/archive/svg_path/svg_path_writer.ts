@@ -1,5 +1,4 @@
 import {BinformatEncoder} from "common/binformat/binformat_encoder"
-import {BufferWriter} from "common/binformat/buffer_writer"
 
 // 16 bits is a good midpoint
 // worst case scenario is space from 0 to 1, noone would really go smaller than this;
@@ -18,10 +17,6 @@ export const svgPathCommandAbsFlag = 1 << 1
 export const svgPathPrefixLength = 2 // numeric flag, abs flag or neg flag
 
 export class SvgPathWriter extends BinformatEncoder<string> {
-
-	constructor(inputValue: string, writer?: BufferWriter) {
-		super(inputValue, writer)
-	}
 
 	protected writeRootValue(value: string): void {
 		const pathParts = [...getPathParts(value)]

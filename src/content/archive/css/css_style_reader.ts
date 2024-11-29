@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 import {BinformatDecoder} from "common/binformat/binformat_decoder"
 import {CssValueType, cssValueTypeBitLength} from "content/archive/css/css_style_writer"
 

@@ -51,6 +51,7 @@ export type SettersByArity = {
 }
 
 export type GlVecSize = 1 | 2 | 3 | 4
+export type GlVecOffset = 0 | 1 | 2 | 3
 export type ShaderFieldSizeMap<N extends string> = Readonly<Record<N, GlVecSize>>
 
 export type ShaderNumberType = "float" | "int" | "uint"

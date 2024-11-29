@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 import {BinformatDecoder} from "common/binformat/binformat_decoder"
 import {E8JsonOtherTypeCode, E8JsonTypeCode, e8JsonBase64StringTypeBitLength, e8JsonTypeBitLength} from "content/archive/json/e8_json_writer"
 

@@ -73,12 +73,14 @@ function glueSvgsIntoAtlas(textures: (SvgTextureFile & XY)[], sideLength: number
 const exploreSvg = (srcSvgText: string, path: string): SvgTextureFile => {
 	const dom = XmlJs.xml2js(srcSvgText, {compact: false}) as XmlJs.Element
 	const svgAttrs = getSvgFromDom(dom).attributes ?? {}
-	const width = parseFloat(svgAttrs["width"] + "")
-	const height = parseFloat(svgAttrs["height"] + "")
+	const width = parseFloat(svgAttrs.width + "")
+	const height = parseFloat(svgAttrs.height + "")
 	if(Number.isNaN(width) || Number.isNaN(height)){
-		throw new Error(`SVG at ${path} has weird width/height: ${svgAttrs["width"]}/${svgAttrs["height"]}`)
+		throw new Error(`SVG at ${path} has weird width/height: ${svgAttrs.width}/${svgAttrs.height}`)
 	}
-	return {svg: XmlJs.js2xml(dom), width, height, path}
+	return {
+		svg: XmlJs.js2xml(dom), width, height, path
+	}
 }
 
 export function setSvgPosition(srcSvgText: string, xy: XY): string {
@@ -87,9 +89,9 @@ export function setSvgPosition(srcSvgText: string, xy: XY): string {
 	const dom = XmlJs.xml2js(srcSvgText, {compact: false}) as XmlJs.Element
 	const svg = getSvgFromDom(dom)
 
-	const attrs = svg.attributes || {}
-	attrs["x"] = xy.x
-	attrs["y"] = xy.y
+	const attrs = svg.attributes ?? {}
+	attrs.x = xy.x
+	attrs.y = xy.y
 	svg.attributes = attrs
 	return XmlJs.js2xml(dom)
 }

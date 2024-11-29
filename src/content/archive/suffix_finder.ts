@@ -25,8 +25,12 @@ Resulting array is sorted; most frequent suffix appears first
 
 It's imprecise, in a sense that it's not possible to accurately calculate costs because bigger values will take more space (in binformat),
 but it's a good approximation anyway */
-export const findSuffixes = ({values, getSuffixWriteCost, getStringWriteCost, getRefWriteCost}: Args): Result => {
-	const root: Trie = {children: {}, count: 0, savedCost: 0, char: "", isSelected: false}
+export const findSuffixes = ({
+	values, getSuffixWriteCost, getStringWriteCost, getRefWriteCost
+}: Args): Result => {
+	const root: Trie = {
+		children: {}, count: 0, savedCost: 0, char: "", isSelected: false
+	}
 
 	// filling initial trie
 	for(const value of values){
@@ -34,7 +38,9 @@ export const findSuffixes = ({values, getSuffixWriteCost, getStringWriteCost, ge
 		currentTrie.count++
 		for(let i = value.length - 1; i >= 0; i--){
 			const char = value.charAt(i)
-			currentTrie = (currentTrie.children[char] ??= {children: {}, char, count: 0, savedCost: 0, isSelected: false})
+			currentTrie = (currentTrie.children[char] ??= {
+				children: {}, char, count: 0, savedCost: 0, isSelected: false
+			})
 			currentTrie.count++
 		}
 	}
@@ -82,7 +88,7 @@ export const findSuffixes = ({values, getSuffixWriteCost, getStringWriteCost, ge
 
 // it's a debug util, it's allowed to be unused
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const trieToString = (trie: Trie, suffix: string = ""): string => {
+const trieToString = (trie: Trie, suffix = ""): string => {
 	suffix = trie.char + suffix
 	let result = `${suffix} (count = ${trie.count}, saved cost = ${trie.savedCost})`
 	for(const child of Object.values(trie.children)){

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import {describe, test} from "@nartallax/clamsensor"
 import {expect} from "chai"
 import {InputKeyActionSet} from "user_input/keys/input_key_action_set"

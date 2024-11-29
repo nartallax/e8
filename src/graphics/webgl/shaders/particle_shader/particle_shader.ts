@@ -40,5 +40,7 @@ export const makeParticleShader = (gl: WebGL2RenderingContext, vertexBuffer: Web
 		.build()
 
 	// 256 is not even properly tested. maybe much more/less will yield more performance
-	return makeShaderFromSources(gl, vertexSource, fragmentSource, 256, vertexBuffer, indexBuffer)
+	return makeShaderFromSources({
+		gl, vertexSource, fragmentSource, packSize: 256, vertexBuffer, indexBuffer
+	})
 }

@@ -107,7 +107,7 @@ export class PhysicsEngine {
 		Matter.Engine.update(this.mjs, deltaTime * 1000)
 
 		for(const entity of this.movingEntities){
-			const body = entity.phys as Matter.Body
+			const body = entity.phys!
 			const pos = body.position
 			entity.x = pos.x / engineCoordsMult
 			entity.y = pos.y / engineCoordsMult
@@ -131,7 +131,7 @@ export class PhysicsEngine {
 		entity.currentGraphicVersion++
 	}
 
-	applyForceToEntity(entity: EntityImpl, xForce: number, yForce: number, entityOffsetX: number, entityOffsetY: number): void {
+	applyForceToEntity(entity: EntityImpl, force: XY, offset: XY): void {
 		const body = entity.phys
 		if(!body){
 			return
@@ -140,18 +140,18 @@ export class PhysicsEngine {
 		let offsetX = 0
 		let offsetY = 0
 
-		if(entityOffsetX !== 0 || entityOffsetY !== 0){
+		if(offset.x !== 0 || offset.y !== 0){
 			// TODO: this can be optimized by precalculating those points
 			// maybe add this option to asset manager...?
-			const dist = Math.sqrt(entityOffsetX ** 2 + entityOffsetY ** 2)
-			const angle = body.angle + Math.atan2(entityOffsetY, entityOffsetX)
+			const dist = Math.sqrt(offset.x ** 2 + offset.y ** 2)
+			const angle = body.angle + Math.atan2(offset.y, offset.x)
 			offsetX = Math.cos(angle) * dist * engineCoordsMult
 			offsetY = Math.sin(angle) * dist * engineCoordsMult
 		}
 
 		Matter.Body.applyForce(body,
 			Matter.Vector.create(body.position.x + offsetX, body.position.y + offsetY),
-			Matter.Vector.create(xForce, yForce)
+			Matter.Vector.create(force.x, force.y)
 		)
 	}
 }

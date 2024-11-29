@@ -106,7 +106,9 @@ function actionsObjectToArray(binds: Map<string, InputBindDefinition>, obj: Reco
 				group: def.groupIndex, chords: def.defaultChords, name, handlers: {onDown: value}
 			}
 		} else {
-			obj = {group: def.groupIndex, chords: def.defaultChords, name, handlers: value}
+			obj = {
+				group: def.groupIndex, chords: def.defaultChords, name, handlers: value
+			}
 		}
 		result.push(obj)
 	}

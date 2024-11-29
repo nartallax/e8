@@ -29,8 +29,8 @@ export class GraphicEngine {
 	private readonly layers: readonly GraphicLayer<SomeShader>[]
 	private readonly visibleEntities = new Set<EntityImpl>()
 	readonly canvas: HTMLCanvasElement
-	private screenHeight: number = 0
-	private screenWidth: number = 0
+	private screenHeight = 0
+	private screenWidth = 0
 	private atlasTexture: WebGLTexture | null = null
 	private frameCount = 0
 	private activeShader: SomeShader | null = null
@@ -49,14 +49,18 @@ export class GraphicEngine {
 		this.mainShader = makeMainShader(gl, this.squareVertexBuffer, this.squareIndexBuffer)
 		this.mainPool = new ListPool(
 			() => this.mainShader.makePack(),
-			pack => pack.delete(),
+			pack => {
+				pack.delete()
+			},
 			16
 		)
 
 		this.particleShader = makeParticleShader(gl, this.squareVertexBuffer, this.squareIndexBuffer)
 		this.particlePool = new ListPool(
 			() => this.particleShader.makePack(),
-			pack => pack.delete(),
+			pack => {
+				pack.delete()
+			},
 			16
 		)
 

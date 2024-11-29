@@ -28,11 +28,9 @@ export type ContentPackInputBind = Omit<InputBindDefinition, "groupIndex"> & {
 	groupPath?: string
 }
 
-export type ContentPackInputGroup = {
-	// TODO: redo this. it's simplier to add something like "bind names" to InputBind, allow to have multiple of them, and pass them to handler of this input bind
-
-	// this object is supposed to be empty
-}
+// TODO: redo this. it's simplier to add something like "bind names" to InputBind, allow to have multiple of them, and pass them to handler of this input bind
+// this object is supposed to be empty
+export type ContentPackInputGroup = Record<string, never>
 
 export type ContentPackLayer = LayerDefinition
 

@@ -1,4 +1,4 @@
-import {GlVecSize, SettersByArity, ShaderFieldSizeMap, ShaderField, AttribInstance, AttribDataPack, SetterName, SetterMap} from "graphics/graphic_types"
+import {GlVecSize, SettersByArity, ShaderFieldSizeMap, ShaderField, AttribInstance, AttribDataPack, SetterName, SetterMap, GlVecOffset} from "graphics/graphic_types"
 import {makeAttribArrayCreator} from "graphics/webgl/shader_builder/attributes"
 import {makeGetterName, makeSetterName} from "graphics/webgl/graphic_utils"
 import {Perf} from "common/perfometer"
@@ -19,7 +19,9 @@ type AttribInstanceInternal<A extends ShaderFieldSizeMap<string>> = AttribInstan
 	moveTo(otherPack: AttribDataPackInternal<A>, otherIndex: number, cleanup: boolean): void
 }
 
-export function makeAttribDataPackClass<A extends ShaderFieldSizeMap<string>>(gl: WebGL2RenderingContext, program: WebGLProgram, vertexField: ShaderField, arraySize: number, attribs: ShaderField<A>[], vertexBuffer: WebGLBuffer, indexBuffer: WebGLBuffer): {new(): AttribDataPack<A>} {
+export function makeAttribDataPackClass<A extends ShaderFieldSizeMap<string>>({
+	gl, program, vertexField, arraySize, attribs, vertexBuffer, indexBuffer
+}: {gl: WebGL2RenderingContext, program: WebGLProgram, vertexField: ShaderField, arraySize: number, attribs: ShaderField<A>[], vertexBuffer: WebGLBuffer, indexBuffer: WebGLBuffer}): {new(): AttribDataPack<A>} {
 	const locations = attribs.map(field => gl.getAttribLocation(program, field.name))
 	const vertexLocation = gl.getAttribLocation(program, vertexField.name)
 	const makeArrays = makeAttribArrayCreator(gl, locations, arraySize, attribs)
@@ -144,7 +146,7 @@ export function makeAttribDataPackClass<A extends ShaderFieldSizeMap<string>>(gl
 			for(let i = 0; firstFreeSlot < otherPack.itemCount; i++){
 				const instance = otherPack.instances[i]!
 				if(instance !== null){
-					instance!.moveTo(this, firstFreeSlot++, false)
+					instance.moveTo(this, firstFreeSlot++, false)
 				}
 			}
 			// we don't do any cleanup actions on other pack, it will be deleted anyway
@@ -195,7 +197,7 @@ function makeAttribInstanceClass<M extends ShaderFieldSizeMap<string>>(attribs: 
 
 	const argNames = ["a", "b", "c", "d"]
 
-	function arrOffsetCode(fieldIndex: number, fieldSize: number, extOffset: number): string {
+	function arrOffsetCode(fieldIndex: number, fieldSize: GlVecSize, extOffset: number): string {
 		let code = ""
 		code += `const arr = this.pack.data[${fieldIndex}]\n`
 		const plusOffset = extOffset === 0 ? "" : " + " + extOffset
@@ -216,14 +218,16 @@ function makeAttribInstanceClass<M extends ShaderFieldSizeMap<string>>(attribs: 
 		for(let i = 0; i < extSize; i++){
 			fnCode += `arr[offset${i === 0 ? "" : " + " + i}] = ${argNames[i]}\n`
 		}
+		// eslint-disable-next-line @typescript-eslint/no-implied-eval
 		return new Function(...argNames.slice(0, extSize), fnCode) as SettersByArity[S]
 	}
 
-	function makeGetter(fieldIndex: number, fieldSize: number, extOffset: number): (this: AttribInstanceImpl, offset: 0 | 1 | 2 | 3) => number {
+	function makeGetter(fieldIndex: number, fieldSize: GlVecSize, extOffset: number): (this: AttribInstanceImpl, offset: GlVecOffset) => number {
 		let fnCode = ""
 		fnCode += arrOffsetCode(fieldIndex, fieldSize, extOffset)
 		fnCode += "return arr[offset + offsetWithinField]"
-		return new Function("offsetWithinField", fnCode) as (this: AttribInstanceImpl, offset: 0 | 1 | 2 | 3) => number
+		// eslint-disable-next-line @typescript-eslint/no-implied-eval
+		return new Function("offsetWithinField", fnCode) as (this: AttribInstanceImpl, offset: GlVecOffset) => number
 	}
 
 	const _resetField = attribs.find(field => field.resetValue !== null)

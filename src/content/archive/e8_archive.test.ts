@@ -156,13 +156,17 @@ describe("e8a format", () => {
 		const archive = new E8ArchiveWriter([
 			{value: "emptydir", children: []},
 			{value: "emptydir_suffffffffix", children: []},
-			{value: "models_suffffffffix", children: [
-				{value: "creatures", children: [
-					{value: {fileName: "dog.json", fileContent: jsonA}},
-					{value: {fileName: "notDog.json", fileContent: jsonB}},
-					{value: {fileName: "totallyNotDog.json", fileContent: jsonC}}
-				]}
-			]}
+			{
+				value: "models_suffffffffix", children: [
+					{
+						value: "creatures", children: [
+							{value: {fileName: "dog.json", fileContent: jsonA}},
+							{value: {fileName: "notDog.json", fileContent: jsonB}},
+							{value: {fileName: "totallyNotDog.json", fileContent: jsonC}}
+						]
+					}
+				]
+			}
 		]).encode()
 
 		const entries = new E8ArchiveReader(archive).getRootEntryList(value => "!" + value)
@@ -203,13 +207,17 @@ describe("e8a format", () => {
 		expect(dec).to.eql([
 			{value: "emptydir", children: []},
 			{value: "emptydir_suffffffffix", children: []},
-			{value: "models_suffffffffix", children: [
-				{value: "creatures", children: [
-					{value: {fileName: "dog.json", fileContent: reformatJson(jsonA)}},
-					{value: {fileName: "notDog.json", fileContent: reformatJson(jsonB)}},
-					{value: {fileName: "totallyNotDog.json", fileContent: reformatJson(jsonC)}}
-				]}
-			]}
+			{
+				value: "models_suffffffffix", children: [
+					{
+						value: "creatures", children: [
+							{value: {fileName: "dog.json", fileContent: reformatJson(jsonA)}},
+							{value: {fileName: "notDog.json", fileContent: reformatJson(jsonB)}},
+							{value: {fileName: "totallyNotDog.json", fileContent: reformatJson(jsonC)}}
+						]
+					}
+				]
+			}
 		])
 	})
 })

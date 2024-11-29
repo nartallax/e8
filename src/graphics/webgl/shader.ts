@@ -3,7 +3,9 @@ import {SetterMap, Shader, ShaderField, ShaderFieldSizeMap, ShaderRevisionMap, S
 import {getUniqueShaderFields} from "graphics/webgl/graphic_utils"
 import {makeUniformSetterMap} from "graphics/webgl/uniforms"
 
-export function makeShaderFromSources<A extends ShaderFieldSizeMap<string>, AA extends ShaderFieldSizeMap<string>, U extends ShaderFieldSizeMap<string>, UU extends ShaderFieldSizeMap<string>>(gl: WebGL2RenderingContext, vertexSource: ShaderSource<A, U>, fragmentSource: ShaderSource<AA, UU>, packSize: number, vertexBuffer: WebGLBuffer, indexBuffer: WebGLBuffer): Shader<A & AA, U & UU> {
+export function makeShaderFromSources<A extends ShaderFieldSizeMap<string>, AA extends ShaderFieldSizeMap<string>, U extends ShaderFieldSizeMap<string>, UU extends ShaderFieldSizeMap<string>>({
+	gl, vertexSource, fragmentSource, packSize, vertexBuffer, indexBuffer
+}: {gl: WebGL2RenderingContext, vertexSource: ShaderSource<A, U>, fragmentSource: ShaderSource<AA, UU>, packSize: number, vertexBuffer: WebGLBuffer, indexBuffer: WebGLBuffer}): Shader<A & AA, U & UU> {
 	const vertexField = vertexSource.vertexField
 	if(!vertexField){
 		throw new Error("Cannot make shader without vertex field")
@@ -12,7 +14,9 @@ export function makeShaderFromSources<A extends ShaderFieldSizeMap<string>, AA e
 
 	const {program, shaders} = makeProgram(gl, vertexSource.code, fragmentSource.code)
 
-	const Pack = makeAttribDataPackClass<A & AA>(gl, program, vertexField, packSize, attribs, vertexBuffer, indexBuffer)
+	const Pack = makeAttribDataPackClass<A & AA>({
+		gl, program, vertexField, arraySize: packSize, attribs, vertexBuffer, indexBuffer
+	})
 
 	const uniforms = [...vertexSource.uniforms, ...fragmentSource.uniforms]
 	const setters: SetterMap<U & UU> = makeUniformSetterMap<U & UU>(gl, program, uniforms)
@@ -27,7 +31,9 @@ export function makeShaderFromSources<A extends ShaderFieldSizeMap<string>, AA e
 			}
 		},
 		makePack: () => new Pack(),
-		activate: () => gl.useProgram(program),
+		activate: () => {
+			gl.useProgram(program)
+		},
 		lastActiveFrame: -1
 	}
 
@@ -68,9 +74,15 @@ function makeProgram(gl: WebGL2RenderingContext, vertexShaderCode: string, fragm
 
 		return {program, shaders: [fragShader, vertShader]}
 	} catch(e){
-		fragShader && gl.deleteShader(fragShader)
-		vertShader && gl.deleteShader(vertShader)
-		program && gl.deleteProgram(program)
+		if(fragShader){
+			gl.deleteShader(fragShader)
+		}
+		if(vertShader){
+			gl.deleteShader(vertShader)
+		}
+		if(program){
+			gl.deleteProgram(program)
+		}
 		throw e
 	}
 }

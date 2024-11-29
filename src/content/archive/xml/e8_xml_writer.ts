@@ -20,7 +20,8 @@ export const e8XmlElementAttributesBit = 1 << 4
 export const e8XmlElementTypeLength = 5 // 2 bits for "element" costant, referrence bit, children bit, attributes bit
 
 function* dfltGetStringsOfAttributeValue(value: string, attrName: string, elName: string): IterableIterator<string> {
-	void attrName, elName // that's for overriding
+	void attrName
+	void elName // that's for overriding
 	yield value
 }
 
@@ -71,7 +72,7 @@ export class E8XmlWriter extends BinformatEncoder<string> {
 			}
 		}
 
-		if(value.declaration && value.declaration.attributes){
+		if(value.declaration?.attributes){
 			for(const [k, v] of Object.entries(value.declaration.attributes)){
 				yield k
 				if(typeof(v) === "string"){
@@ -95,7 +96,9 @@ export class E8XmlWriter extends BinformatEncoder<string> {
 		const declAttributes = root.declaration?.attributes ?? {}
 		this.writeAttributes(declAttributes, "?xml")
 
-		this.writeArray(root.elements ?? [], el => this.writeElement(el))
+		this.writeArray(root.elements ?? [], el => {
+			this.writeElement(el)
+		})
 	}
 
 	private writeXmlString(value: string, baseType: number, refBit: number, bits: number) {
@@ -108,7 +111,8 @@ export class E8XmlWriter extends BinformatEncoder<string> {
 	}
 
 	protected writeAttributeValue(value: string, attrName: string, elName: string) {
-		void attrName, elName // that's for subclasses
+		void attrName
+		void elName // that's for subclasses
 		this.writeXmlString(value, 0, e8XmlStringReferredBit, e8XmlStringTypeLength)
 	}
 
@@ -165,7 +169,9 @@ export class E8XmlWriter extends BinformatEncoder<string> {
 		}
 
 		if(hasChildren){
-			this.writeArray(el.elements!, el => this.writeElement(el))
+			this.writeArray(el.elements!, el => {
+				this.writeElement(el)
+			})
 		}
 	}
 

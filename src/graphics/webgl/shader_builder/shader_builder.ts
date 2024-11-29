@@ -21,7 +21,7 @@ const getFieldDefaults = <T extends ShaderFieldType, SS extends GlVecSize>(): Om
 })
 
 // yes, I really want {} here. they make the resulting types after building look better
-// eslint-disable-next-line @typescript-eslint/ban-types
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export class ShaderBuilder<A extends ShaderFieldSizeMap<string> = {}, U extends ShaderFieldSizeMap<string> = {}> {
 	private attributeFields: readonly ShaderAttribSourceField<keyof A & string, GlVecSize>[] = []
 	private vertexField: ShaderAttribSourceField<string, GlVecSize> | null = null
@@ -141,7 +141,7 @@ export class ShaderBuilder<A extends ShaderFieldSizeMap<string> = {}, U extends 
 			if(field.sourceFields[0]!.name !== field.name){
 				// we cannot allow that because you can't take [0] on a float
 				// anyway, our resolution algo should just name fields as expected, so that's just sanity check
-				throw new Error(`There's only one external field "${field.sourceFields[0]}" for internal field "${field.name}", but names don't match; that's illegal`)
+				throw new Error(`There's only one external field "${field.sourceFields[0]!.name}" for internal field "${field.name}", but names don't match; that's illegal`)
 			}
 		} else {
 			let offset = 0

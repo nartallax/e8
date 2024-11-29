@@ -86,8 +86,12 @@ class CursorEvent extends EventImpl<[evt: CursorMoveInputEvent]> {
 
 	constructor(private readonly controller: UserCursorInputController) {
 		super({
-			onFirstSub: () => controller.incSubCount(),
-			onLastUnsub: () => controller.decSubCount()
+			onFirstSub: () => {
+				controller.incSubCount()
+			},
+			onLastUnsub: () => {
+				controller.decSubCount()
+			}
 		})
 	}
 

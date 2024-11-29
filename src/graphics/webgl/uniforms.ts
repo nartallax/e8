@@ -13,17 +13,33 @@ function makeUniform<M extends ShaderFieldSizeMap<string>, K extends keyof M & s
 	const loc = gl.getUniformLocation(program, field.name)
 	if(field.type === "float"){
 		switch(field.size){
-			case 1: return (a: number) => gl.uniform1f(loc, a)
-			case 2: return ((a: number, b: number) => gl.uniform2f(loc, a, b)) as SettersByArity[M[K]]
-			case 3: return ((a: number, b: number, c: number) => gl.uniform3f(loc, a, b, c)) as SettersByArity[M[K]]
-			case 4: return ((a: number, b: number, c: number, d: number) => gl.uniform4f(loc, a, b, c, d)) as SettersByArity[M[K]]
+			case 1: return (a: number) => {
+				gl.uniform1f(loc, a)
+			}
+			case 2: return ((a: number, b: number) => {
+				gl.uniform2f(loc, a, b)
+			}) as SettersByArity[M[K]]
+			case 3: return ((a: number, b: number, c: number) => {
+				gl.uniform3f(loc, a, b, c)
+			}) as SettersByArity[M[K]]
+			case 4: return ((a: number, b: number, c: number, d: number) => {
+				gl.uniform4f(loc, a, b, c, d)
+			}) as SettersByArity[M[K]]
 		}
 	} else {
 		switch(field.size){
-			case 1: return ((a: number) => gl.uniform1i(loc, a))
-			case 2: return ((a: number, b: number) => gl.uniform2i(loc, a, b)) as SettersByArity[M[K]]
-			case 3: return ((a: number, b: number, c: number) => gl.uniform3i(loc, a, b, c)) as SettersByArity[M[K]]
-			case 4: return ((a: number, b: number, c: number, d: number) => gl.uniform4i(loc, a, b, c, d)) as SettersByArity[M[K]]
+			case 1: return ((a: number) => {
+				gl.uniform1i(loc, a)
+			})
+			case 2: return ((a: number, b: number) => {
+				gl.uniform2i(loc, a, b)
+			}) as SettersByArity[M[K]]
+			case 3: return ((a: number, b: number, c: number) => {
+				gl.uniform3i(loc, a, b, c)
+			}) as SettersByArity[M[K]]
+			case 4: return ((a: number, b: number, c: number, d: number) => {
+				gl.uniform4i(loc, a, b, c, d)
+			}) as SettersByArity[M[K]]
 		}
 	}
 }

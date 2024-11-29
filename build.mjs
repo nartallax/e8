@@ -1,7 +1,7 @@
 import * as Process from "process"
 import { buildUtils } from "@nartallax/ts-build-utils";
 
-let {clear, runTests, build, copyToTarget, cutPackageJson, generateDts, typecheck, publishToNpm, oneAtATime, watch} = buildUtils({
+let {clear, runTests, build, copyToTarget, cutPackageJson, generateDts, typecheck, publishToNpm, oneAtATime, watch, printStats} = buildUtils({
 	defaultBuildOptions: {
 		entryPoints: ["./src/e8.ts"],
 		bundle: true,
@@ -21,6 +21,7 @@ let main = async (mode) => {
 			await watch({
 				onBuildEnd: oneAtATime(generateDts)
 			})
+			console.log("E8 build process is running.")
 		} break
 
 		case "typecheck": {
@@ -38,6 +39,7 @@ let main = async (mode) => {
 			await copyToTarget("README.md", "LICENSE")
 			await cutPackageJson()
 			await generateDts()
+			printStats()
 		} break
 
 		case "publish": {

@@ -39,5 +39,7 @@ export const makeMainShader = (gl: WebGL2RenderingContext, vertexBuffer: WebGLBu
 		.addCode(fragmentMain)
 		.build()
 
-	return makeShaderFromSources(gl, vertexSource, fragmentSource, 32, vertexBuffer, indexBuffer)
+	return makeShaderFromSources({
+		gl, vertexSource, fragmentSource, packSize: 32, vertexBuffer, indexBuffer
+	})
 }

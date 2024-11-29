@@ -42,7 +42,7 @@ export const makeFullyQualifiedPath = (contentPackId: string, path: string) => {
 	return `${contentPackId}:${path}`
 }
 
-const safeSetMap = <K, V>(itemName: string, map: Map<K, V>, k: K, v: V) => {
+const safeSetMap = <K extends string, V>(itemName: string, map: Map<K, V>, k: K, v: V) => {
 	if(map.has(k)){
 		throw new Error(`Duplicate ${itemName} for key ${k}.`)
 	}

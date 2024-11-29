@@ -22,7 +22,9 @@ function loadTexture(gl: WebGL2RenderingContext, url: string): Promise<WebGLText
 				bad(e)
 			}
 		}
-		img.onerror = () => bad(new Error("Failed to load texture: " + url))
+		img.onerror = () => {
+			bad(new Error("Failed to load texture: " + url))
+		}
 		img.src = url
 	})
 }

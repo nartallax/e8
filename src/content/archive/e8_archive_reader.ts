@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 import {BinformatDecoder} from "common/binformat/binformat_decoder"
 import {E8ArchiveEntryCode, E8ArchiveFile, e8ArchiveEntryTypeBitLength} from "content/archive/e8_archive_writer"
 import {E8JsonReader} from "content/archive/json/e8_json_reader"
@@ -67,7 +68,9 @@ export class E8ArchiveReader extends BinformatDecoder<readonly Tree<E8ArchiveFil
 					value[i] = mapDictionaryValue(value[i])
 				}
 			}
-			result.push({code, value, name, byteLength})
+			result.push({
+				code, value, name, byteLength
+			})
 		}
 		return result
 	}

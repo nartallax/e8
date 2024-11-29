@@ -10,7 +10,9 @@ export class E8XmlReader extends BinformatDecoder<string> {
 
 	protected readRootValue(): string {
 		const root = this.readRootXmlElement()
-		return XmlJs.js2xml(root, {spaces: "  ", indentText: true, indentAttributes: false, indentCdata: true})
+		return XmlJs.js2xml(root, {
+			spaces: "  ", indentText: true, indentAttributes: false, indentCdata: true
+		})
 	}
 
 	protected readRootXmlElement(): XmlJs.Element {
@@ -37,7 +39,8 @@ export class E8XmlReader extends BinformatDecoder<string> {
 	}
 
 	protected readAttributeValue(attrName: string, elName: string): string {
-		void attrName, elName // that's for subclasses
+		void attrName
+		void elName // that's for subclasses
 		return this.readXmlString(e8XmlStringReferredBit, e8XmlStringTypeLength)
 	}
 
@@ -53,7 +56,7 @@ export class E8XmlReader extends BinformatDecoder<string> {
 
 	private readElement(): XmlJs.Element {
 		const prefix = this.peekPrefix(e8XmlNodeTypeLength)
-		const type = prefix & 0x3
+		const type: E8XmlNodeType = prefix & 0x3
 
 		if(type === E8XmlNodeType.text){
 			return {

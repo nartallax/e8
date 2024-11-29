@@ -64,11 +64,15 @@ export namespace Perf {
 		const secondsPassed = currentCounter.totalTime / 1000
 
 		const table: DumpTable = []
-		dumpCounter(table, currentCounter, secondsPassed, frameCount, tickCount)
+		dumpCounter({
+			table, counter: currentCounter, secondsPassed, frameCount, tickCount
+		})
 		console.log(formatDumpTable(table))
 	}
 
-	const dumpCounter = (table: DumpTable, counter: Counter, secondsPassed: number, frameCount: number, tickCount: number) => {
+	const dumpCounter = ({
+		table, counter, secondsPassed, frameCount, tickCount
+	}: {table: DumpTable, counter: Counter, secondsPassed: number, frameCount: number, tickCount: number}) => {
 		let name = counter.name
 		for(let i = 0; i < counter.depth; i++){
 			name = "  " + name
@@ -87,13 +91,15 @@ export namespace Perf {
 		}
 
 		for(const childName in counter.children){
-			dumpCounter(table, counter.children[childName]!, secondsPassed, frameCount, tickCount)
+			dumpCounter({
+				table, counter: counter.children[childName]!, secondsPassed, frameCount, tickCount
+			})
 		}
 	}
 
 	const toFixedNoZeroes = (x: number, decimals: number): string => {
 		let str = x.toFixed(decimals)
-		if(str.indexOf(".") !== 0){
+		if(!str.startsWith(".")){
 			str = str.replace(/\.?0+$/, "")
 		}
 		return str

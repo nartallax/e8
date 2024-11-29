@@ -16,23 +16,24 @@
   "devDependencies": {
     "@nartallax/clamsensor": "^2.0.10",
     "@nartallax/package-cutter": "^1.0.4",
-    "@nartallax/ts-build-utils": "^1.0.3",
+    "@nartallax/ts-build-utils": "^1.1.12",
     "@types/chai": "^4.3.6",
     "@types/pako": "^2.0.3",
     "@types/rbush": "^3.0.0",
     "@types/semver": "^7.5.8",
-    "@typescript-eslint/eslint-plugin": "^6.7.0",
-    "@typescript-eslint/parser": "^6.7.0",
     "chai": "^4.3.8",
-    "eslint": "^8.49.0",
-    "typescript": "^5.4.5",
-    "typescript-eslint": "^7.11.0"
+    "typescript": "^5.7.2"
   },
   "dependencies": {
     "@nartallax/forest": "^1.0.2",
+    "@stylistic/eslint-plugin": "^2.11.0",
+    "@typescript-eslint/eslint-plugin": "^8.16.0",
+    "@typescript-eslint/parser": "^8.16.0",
+    "eslint": "^9.15.0",
     "pako": "^2.1.0",
     "rbush": "^3.0.1",
     "semver": "^7.6.3",
+    "typescript-eslint": "^8.16.0",
     "unzipit": "^1.4.3",
     "xml-js": "^1.6.11"
   }

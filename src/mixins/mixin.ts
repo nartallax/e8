@@ -36,7 +36,7 @@ export class Mixin<T extends object> {
 		if(!result){
 			result = this.maker(parent)
 			result.prototype[this.id] = true
-			this.cache.set(parent, result as Cls<T>)
+			this.cache.set(parent, result)
 		}
 		return result as Cls<T & P>
 	}

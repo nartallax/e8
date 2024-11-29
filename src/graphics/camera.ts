@@ -152,10 +152,9 @@ export class CameraImpl implements Camera {
 	onFrame(deltaTime: number): void {
 		if(this.followTarget !== null){
 			const coords = interpolateCoords(
-				this.prevTargetX, this.prevTargetY,
-				this.followTarget.x, this.followTarget.y,
-				this.engine.lastTickTime, this.engine.lastTickTime + this.engine.timePerTick,
-				this.engine.timePassed
+				{x: this.prevTargetX, y: this.prevTargetY},
+				{x: this.followTarget.x, y: this.followTarget.y},
+				{start: this.engine.lastTickTime, end: this.engine.lastTickTime + this.engine.timePerTick, now: this.engine.timePassed}
 			)
 			this.moveTo(coords)
 		}
@@ -279,12 +278,12 @@ class AnimatableValue {
 
 }
 
-function interpolateCoords(xStart: number, yStart: number, xEnd: number, yEnd: number, timeStart: number, timeEnd: number, timeNow: number): {x: number, y: number} {
-	const timeSpan = timeEnd - timeStart
-	const timePassed = timeNow - timeStart
+function interpolateCoords(start: XY, end: XY, time: {start: number, end: number, now: number}): {x: number, y: number} {
+	const timeSpan = time.end - time.start
+	const timePassed = time.now - time.start
 	const progress = Math.min(1, Math.max(0, timePassed / timeSpan))
 
-	const dx = xEnd - xStart
-	const dy = yEnd - yStart
-	return {x: xStart + (dx * progress), y: yStart + (dy * progress)}
+	const dx = end.x - start.x
+	const dy = end.y - start.y
+	return {x: start.x + (dx * progress), y: start.y + (dy * progress)}
 }

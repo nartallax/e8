@@ -1,4 +1,6 @@
-const noop = () => {}
+const noop = () => {
+	// no-op!
+}
 
 type Handler<A extends unknown[]> = (...args: A) => void
 

@@ -80,10 +80,12 @@ describe("E8Json", () => {
 		const index = ["name", "skin", "age"]
 		const indexMap = new Map(index.map((str, index) => [str, index]))
 
-		const json = {name: "dog", skin: "hairy", age: 10, siblings: [
-			{name: "cat", disposition: "ignored"},
-			{name: "hamster", disposition: "delicious"}
-		]}
+		const json = {
+			name: "dog", skin: "hairy", age: 10, siblings: [
+				{name: "cat", disposition: "ignored"},
+				{name: "hamster", disposition: "delicious"}
+			]
+		}
 
 		check(json, indexMap)
 

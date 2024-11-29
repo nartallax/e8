@@ -5,6 +5,7 @@ import {E8XmlWriter, e8XmlStringTypeLength} from "content/archive/xml/e8_xml_wri
 import {E8SvgWriter} from "content/archive/svg/e8_svg_writer"
 import {deflate} from "pako"
 import {Forest, ForestPath, Tree, isTreeBranch} from "@nartallax/forest"
+import {errToString} from "common/err_to_string"
 
 export const enum E8ArchiveEntryCode {
 	// binary is any binary file. means "we don't know what it is, and not making assumptions, just storing this file as-is"
@@ -118,7 +119,9 @@ export class E8ArchiveWriter extends BinformatEncoder<E8ArchiveContent> {
 	private writeTree(tree: Tree<E8ArchiveFile, string>): void {
 		if(isTreeBranch(tree)){
 			this.writeFilename(tree.value, E8ArchiveEntryCode.directory, E8ArchiveEntryCode.directorySuffixed)
-			this.writeArray(tree.children, tree => this.writeTree(tree))
+			this.writeArray(tree.children, tree => {
+				this.writeTree(tree)
+			})
 			return
 		}
 
@@ -167,7 +170,9 @@ export class E8ArchiveWriter extends BinformatEncoder<E8ArchiveContent> {
 
 	private writeIndexArrayEntry(indexArray: readonly string[], type: E8ArchiveEntryCode) {
 		this.writePrefixedString("", type, e8ArchiveEntryTypeBitLength)
-		this.writeArray(indexArray, str => this.writeString(str))
+		this.writeArray(indexArray, str => {
+			this.writeString(str)
+		})
 	}
 
 	private hasAnyFileWithExtension(ext: string): boolean {
@@ -229,7 +234,7 @@ export class E8ArchiveWriter extends BinformatEncoder<E8ArchiveContent> {
 					usageCountMap.set(key, (usageCountMap.get(key) ?? 0) + 1)
 				}
 			} catch(e){
-				throw new Error(`Failed to process file at ${this.pathStringFromTreePath(path)}: ${e}`)
+				throw new Error(`Failed to process file at ${this.pathStringFromTreePath(path)}: ${errToString(e)}`)
 			}
 		}
 

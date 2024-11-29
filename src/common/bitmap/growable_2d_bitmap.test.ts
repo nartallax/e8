@@ -40,7 +40,9 @@ describe("growable 2d bitmap", () => {
 					const result = bitmap.hasAnyInRect(rectX, rectY, w, h)
 					const shouldBeTrue = !isSet ? false : expected
 					if(result !== shouldBeTrue){
-						throw new Error("Test failed for following params: " + JSON.stringify({x, y, rectX, rectY, w, h, isUndersized, isSet, expected, result}))
+						throw new Error("Test failed for following params: " + JSON.stringify({
+							x, y, rectX, rectY, w, h, isUndersized, isSet, expected, result
+						}))
 					}
 				}
 			}

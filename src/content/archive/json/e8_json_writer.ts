@@ -74,6 +74,7 @@ export class E8JsonWriter extends BinformatEncoder<unknown> {
 			try {
 				decodedStr = atob(paddedStr)
 			} catch(e){
+				void e // let's try again
 				continue
 			}
 			if(btoa(decodedStr) === paddedStr){

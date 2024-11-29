@@ -82,9 +82,9 @@ function* getAllNonIdAttrValues(el: XmlJs.Element): IterableIterator<string> {
 
 const dropUnusedIds = (el: XmlJs.Element, attrs: Set<string>) => {
 	if(el.attributes && "id" in el.attributes){
-		const id = el.attributes["id"]
+		const id = el.attributes.id
 		if(typeof(id) === "string" && !attrs.has(id)){
-			delete el.attributes["id"]
+			delete el.attributes.id
 		}
 	}
 
