@@ -5,6 +5,7 @@ import * as Fs from "fs/promises"
 let {clear, runTests, build, copyToTarget, cutPackageJson, generateDts, typecheck, publishToNpm, oneAtATime, watch, printStats} = buildUtils({
 	defaultBuildOptions: {
 		entryPoints: ["./src/e8.ts"],
+		inject: ["./src/global_overrides.ts"],
 		bundle: true,
 		platform: "browser",
 		packages: "bundle",
@@ -41,7 +42,7 @@ let main = async (mode) => {
 		} break
 
 		case "build": {
-			let buildResult = await build({minify: true, metafile: process.argv[3] === "meta"})
+			let buildResult = await build({minify: true})
 			if(buildResult.metafile){
 				await Fs.writeFile("./target/meta.json", JSON.stringify(buildResult.metafile), "utf-8")
 			}
