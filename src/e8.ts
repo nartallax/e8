@@ -1,4 +1,5 @@
 export {browserKeyboardCodeToInputKey} from "user_input/inputs"
+export type {InputKey} from "user_input/inputs"
 export {knownMouseButtonInputs, knownKeyboardInputs, knownMouseWheelInputs} from "user_input/inputs"
 
 export type {XY} from "common_types"
